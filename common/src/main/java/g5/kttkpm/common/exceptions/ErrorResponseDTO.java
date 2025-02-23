@@ -1,4 +1,4 @@
-package g5.kttkpm.common.dto.response;
+package g5.kttkpm.common.exceptions;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
