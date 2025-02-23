@@ -1,7 +1,6 @@
 package g5.kttkpm.common.exceptions;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
@@ -9,13 +8,16 @@ import java.time.LocalDateTime;
  * Chuẩn hóa phản hồi lỗi API.
  */
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ErrorResponseDTO {
-    int status;
-    String message;
-    String errorCode;
-    LocalDateTime timestamp;
+    private final int status;
+    private final String message;
+    private final String errorCode;
+    private final LocalDateTime timestamp;
+    
+    public ErrorResponseDTO(ErrorCodes errorCode, String customMessage) {
+        this.status = errorCode.getHttpStatus();
+        this.message = customMessage != null ? customMessage : errorCode.getMessage();
+        this.errorCode = errorCode.getCode();
+        this.timestamp = LocalDateTime.now();
+    }
 }
