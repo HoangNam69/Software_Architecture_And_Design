@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: authentication-service
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: tmdt-back-end
+            client-secret: TYwKjdo1iRpwhMJfaWCqjN46ro0eNG8W
+            scope: openid
+            authorization-grant-type: authorization_code
+        provider:
+          keycloak:
+            issuer-uri: https://auth.punshub.top/realms/tmdt
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://auth.punshub.top/realms/tmdt/protocol/openid-connect/certs
+server:
+  port: 8081
+
+app:
+  cors:
+    allowed-origin-patterns: http://localhost:[*],https://*.localhost:[*]
+  frontend:
+    url: http://localhost:5173
+  auth:
+    callback-url: http://localhost:8081/api/v1/auth/google/callback
