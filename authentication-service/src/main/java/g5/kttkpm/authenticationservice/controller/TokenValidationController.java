@@ -12,7 +12,7 @@ import java.util.Map;
  * <a href="https://gist.github.com/leminhbao308/2c7b668316423157deaee0f28c639d5c">How to implement token validation in other services</a>
  */
 @RestController
-@RequestMapping("/api/v1/token")
+@RequestMapping("/api/v1/auth/token")
 public class TokenValidationController {
     
     private final TokenValidationService tokenValidationService;
