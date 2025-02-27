@@ -18,13 +18,12 @@ import java.util.Arrays;
 public class SecurityConfig {
     
     @Value("${app.cors.allowed-origin-patterns}")
-    private String[] allowedOriginPatterns;
+    private String allowedOriginPatterns;
     
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .cors(Customizer.withDefaults())
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/api/v1/auth/**").permitAll()
                 .anyExchange().authenticated()
@@ -40,8 +39,7 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         
         // Add all origin pattern to cors config
-        for (String originPattern : allowedOriginPatterns)
-            corsConfig.addAllowedOriginPattern(originPattern);
+        corsConfig.addAllowedOriginPattern(allowedOriginPatterns);
         
         // continue setting
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
