@@ -39,7 +39,7 @@ public class AuthenticationService {
         formData.add("client_secret", clientSecret);
         formData.add("username", loginPayload.username());
         formData.add("password", loginPayload.password());
-        formData.add("scope", "openid profile");
+        formData.add("scope", "openid profile email phone");
         
         // Create request entity
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);

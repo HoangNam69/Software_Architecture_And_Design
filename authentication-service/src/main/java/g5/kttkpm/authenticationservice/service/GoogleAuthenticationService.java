@@ -104,14 +104,14 @@ public class GoogleAuthenticationService {
             JwtResponse jwtResponse = exchangeCodeForTokens(code);
             
             if (jwtResponse == null || jwtResponse.getAccessToken() == null) {
-                return new RegistrationResponse(false, "Failed to authenticate with Google");
+                return new RegistrationResponse(false, "Failed to authenticate with Google", null);
             }
             
             // Get user info from the token
             Map<String, Object> userInfo = getUserInfoFromToken(jwtResponse.getAccessToken());
             
             if (userInfo == null) {
-                return new RegistrationResponse(false, "Failed to retrieve user information from Google");
+                return new RegistrationResponse(false, "Failed to retrieve user information from Google", null);
             }
             
             // Extract user details
@@ -131,13 +131,15 @@ public class GoogleAuthenticationService {
                 username,
                 email,
                 phoneNumber,
-                null
+                null,
+                name,
+                ""
             );
             
             // Register the user
             return registrationService.registerUser(registrationPayload);
         } catch (Exception e) {
-            return new RegistrationResponse(false, "Error during Google registration: " + e.getMessage());
+            return new RegistrationResponse(false, "Error during Google registration: " + e.getMessage(), null);
         }
     }
     
