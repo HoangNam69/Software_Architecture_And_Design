@@ -10,6 +10,7 @@
         <module name="api-gateway" />
         <module name="authentication-service" />
         <module name="user-service" />
+        <module name="category-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -21,6 +22,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
       <module name="authentication-service" options="-parameters" />
+      <module name="category-service" options="-parameters" />
       <module name="common" options="" />
       <module name="user-service" options="" />
     </option>
