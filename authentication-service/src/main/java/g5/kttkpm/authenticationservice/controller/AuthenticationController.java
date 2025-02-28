@@ -3,6 +3,7 @@ package g5.kttkpm.authenticationservice.controller;
 import g5.kttkpm.authenticationservice.payload.LoginPayload;
 import g5.kttkpm.authenticationservice.response.JwtResponse;
 import g5.kttkpm.authenticationservice.service.AuthenticationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,9 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginPayload loginPayload) {
         JwtResponse jwtResponse = authenticationService.login(loginPayload);
-        return ResponseEntity.ok(jwtResponse);
+        if (jwtResponse.isStatus())
+            return ResponseEntity.ok(jwtResponse);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jwtResponse);
     }
     
     @PostMapping("/logout")

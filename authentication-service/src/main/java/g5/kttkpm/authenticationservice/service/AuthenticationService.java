@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -44,8 +45,44 @@ public class AuthenticationService {
         // Create request entity
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
         
-        // Send request and return response
-        return restTemplate.postForObject(tokenUrl, requestEntity, JwtResponse.class);
+        // Create a response with default values
+        JwtResponse response = new JwtResponse();
+        
+        try {
+            // Send request and get response
+            JwtResponse keycloakResponse = restTemplate.postForObject(tokenUrl, requestEntity, JwtResponse.class);
+            
+            // Copy values from Keycloak response to our response
+            if (keycloakResponse != null) {
+                response.setAccessToken(keycloakResponse.getAccessToken());
+                response.setExpiresIn(keycloakResponse.getExpiresIn());
+                response.setRefreshExpiresIn(keycloakResponse.getRefreshExpiresIn());
+                response.setRefreshToken(keycloakResponse.getRefreshToken());
+                response.setTokenType(keycloakResponse.getTokenType());
+                
+                // Set status to true for successful login
+                response.setStatus(true);
+                response.setMessage("Login successful");
+            }
+        } catch (HttpClientErrorException e) {
+            // Set status to false and provide error message on failure
+            response.setStatus(false);
+            
+            // Determine the cause of the error based on status code
+            if (e.getStatusCode().value() == 401) {
+                response.setMessage("Invalid username or password");
+            } else if (e.getStatusCode().value() == 400) {
+                response.setMessage("Invalid request parameters");
+            } else {
+                response.setMessage("Authentication failed: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            // Handle any other exceptions
+            response.setStatus(false);
+            response.setMessage("Authentication service error: " + e.getMessage());
+        }
+        
+        return response;
     }
     
     public void logout(String refreshToken) {
