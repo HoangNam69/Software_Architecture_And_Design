@@ -1,6 +1,7 @@
 package g5.kttkpm.categoryservice.entity;
 
 import jakarta.persistence.*;
+
 import java.util.UUID;
 
 @Entity
