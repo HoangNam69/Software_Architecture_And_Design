@@ -1,7 +1,7 @@
 package g5.kttkpm.authenticationservice.response;
 
 public record RegistrationResponse(
-    boolean success,
+    boolean status,
     String message,
     Object data
 ) {

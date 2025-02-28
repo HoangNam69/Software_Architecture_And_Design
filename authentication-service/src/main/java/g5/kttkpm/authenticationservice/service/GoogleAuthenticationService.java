@@ -96,7 +96,7 @@ public class GoogleAuthenticationService {
      *
      * @param code The authorization code from Google
      * @param phoneNumber The phone number to associate with the account
-     * @return RegistrationResponse indicating success or failure
+     * @return RegistrationResponse indicating status or failure
      */
     public RegistrationResponse registerWithGoogle(String code, String phoneNumber) {
         try {

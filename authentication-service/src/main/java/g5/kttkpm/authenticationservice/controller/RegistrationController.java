@@ -22,7 +22,7 @@ public class RegistrationController {
     @PostMapping("/register")
     public ResponseEntity<RegistrationResponse> register(@RequestBody RegistrationPayload registrationPayload) {
         RegistrationResponse response = registrationService.registerUser(registrationPayload);
-        if (response.success()) {
+        if (response.status()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);

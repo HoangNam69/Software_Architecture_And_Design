@@ -63,7 +63,7 @@ public class GoogleAuthenticationController {
             
             // Redirect to frontend with registration result
             String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth-callback")
-                .queryParam("registration", result.success())
+                .queryParam("registration", result.status())
                 .queryParam("message", result.message())
                 .build().toUriString();
             
@@ -94,7 +94,7 @@ public class GoogleAuthenticationController {
             payload.phoneNumber()
         );
         
-        if (response.success()) {
+        if (response.status()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
