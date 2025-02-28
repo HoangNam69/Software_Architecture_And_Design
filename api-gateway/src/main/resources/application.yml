@@ -35,6 +35,8 @@ spring:
         #     - Path=/api/v1/orders/**
         #   filters:
         #     - StripPrefix=0
+  main:
+    allow-bean-definition-overriding: true
 
 server:
   port: 8080
