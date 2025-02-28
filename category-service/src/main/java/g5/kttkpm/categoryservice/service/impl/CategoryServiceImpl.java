@@ -1,6 +1,7 @@
 package g5.kttkpm.categoryservice.service.impl;
 
 import g5.kttkpm.categoryservice.entity.Category;
+import g5.kttkpm.categoryservice.payload.CategoryPayload;
 import g5.kttkpm.categoryservice.repository.CategoryRepository;
 import g5.kttkpm.categoryservice.service.CategoryService;
 import org.springframework.http.HttpStatus;
@@ -31,14 +32,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Category createCategory(Category category) {
-        Optional<Category> existingCategory = categoryRepository.findByName(category.getName());
+    public Category createCategory(CategoryPayload categoryPayload) {
+        Optional<Category> existingCategory = categoryRepository.findByName(categoryPayload.name());
 
         if (existingCategory.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name '" + category.getName() + "' already exists.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name '" + categoryPayload.name() + "' already exists.");
         }
+        
+        Category newCategory = new Category();
+        newCategory.setName(categoryPayload.name());
 
-        return categoryRepository.save(category);
+        return categoryRepository.save(newCategory);
     }
 
     @Override

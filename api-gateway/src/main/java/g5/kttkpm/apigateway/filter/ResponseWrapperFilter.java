@@ -29,10 +29,6 @@ public class ResponseWrapperFilter implements GlobalFilter, Ordered {
     
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // Skip wrapping for auth endpoints if needed
-//        if (exchange.getRequest().getURI().getPath().startsWith("/api/v1/auth")) {
-//            return chain.filter(exchange);
-//        }
         
         ServerHttpResponse originalResponse = exchange.getResponse();
         DataBufferFactory bufferFactory = originalResponse.bufferFactory();

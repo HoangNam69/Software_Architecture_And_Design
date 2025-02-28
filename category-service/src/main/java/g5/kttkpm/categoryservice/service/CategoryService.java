@@ -1,6 +1,7 @@
 package g5.kttkpm.categoryservice.service;
 
 import g5.kttkpm.categoryservice.entity.Category;
+import g5.kttkpm.categoryservice.payload.CategoryPayload;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface CategoryService {
 
     Category getCategoryById(UUID id);
 
-    Category createCategory(Category category);
+    Category createCategory(CategoryPayload categoryPayload);
 
     Category updateCategory(UUID id, Category category);
 

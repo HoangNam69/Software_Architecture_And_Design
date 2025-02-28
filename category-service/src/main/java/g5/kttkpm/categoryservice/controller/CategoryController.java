@@ -1,6 +1,7 @@
 package g5.kttkpm.categoryservice.controller;
 
 import g5.kttkpm.categoryservice.entity.Category;
+import g5.kttkpm.categoryservice.payload.CategoryPayload;
 import g5.kttkpm.categoryservice.service.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,8 @@ public class CategoryController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Category> createCategory(@RequestBody Category category) {
-        Category createdCategory = categoryService.createCategory(category);
+    public ResponseEntity<Category> createCategory(@RequestBody CategoryPayload categoryPayload) {
+        Category createdCategory = categoryService.createCategory(categoryPayload);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory);
     }
 
