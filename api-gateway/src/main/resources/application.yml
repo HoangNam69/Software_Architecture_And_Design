@@ -55,6 +55,6 @@ server:
 
 app:
   cors:
-    allowed-origin-patterns: http://localhost:[*],https://*.localhost:[*]
+    allowed-origin-patterns: http://localhost:*,https://*.localhost:*
   auth:
     token-validation-url: http://localhost:8081/api/v1/auth/token/validate

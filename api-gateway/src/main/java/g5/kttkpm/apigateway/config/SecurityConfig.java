@@ -43,12 +43,18 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         
         // Add all origin pattern to cors config
-        corsConfig.addAllowedOriginPattern(allowedOriginPatterns);
+        // corsConfig.addAllowedOriginPattern(allowedOriginPatterns);
+        // Split the patterns and add each one
+        String[] patterns = allowedOriginPatterns.split(",");
+        for (String pattern : patterns) {
+            corsConfig.addAllowedOriginPattern(pattern.trim());
+        }
         
         // continue setting
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         corsConfig.setAllowCredentials(true);
+        corsConfig.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
