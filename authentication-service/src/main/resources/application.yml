@@ -20,8 +20,6 @@ server:
   port: 8081
 
 app:
-  cors:
-    allowed-origin-patterns: http://localhost:[*],https://*.localhost:[*]
   frontend:
     url: http://localhost:5173
   auth:
