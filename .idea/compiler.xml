@@ -21,7 +21,7 @@
   </component>
   <component name="EclipseCompilerSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="product-service" options="-parameters" />
+      <module name="product-service" options="" />
     </option>
   </component>
   <component name="JavacSettings">
@@ -30,7 +30,7 @@
       <module name="authentication-service" options="-parameters" />
       <module name="category-service" options="-parameters" />
       <module name="common" options="" />
-      <module name="product-service" options="" />
+      <module name="product-service" options="-parameters" />
       <module name="user-service" options="" />
     </option>
   </component>

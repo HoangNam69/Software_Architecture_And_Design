@@ -1,10 +1,12 @@
 package g5.kttkpm.productservice.controller;
 
 import g5.kttkpm.productservice.dto.CategoryDTO;
+import g5.kttkpm.productservice.dto.ListResponse;
 import g5.kttkpm.productservice.model.Product;
 import g5.kttkpm.productservice.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +28,18 @@ public class ProductController {
     // Basic CRUD Operations
     
     @GetMapping
-    public ResponseEntity<Page<Product>> getAllProducts(Pageable pageable) {
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
+    public ResponseEntity<ListResponse<Product>> getAllProducts(
+        @RequestParam(name = "page", defaultValue = "1") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size,
+        @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
+        @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir
+    ) {
+        // Create a Pageable object with the given page, size, sortBy, and sortDir
+        Pageable pageable = createPageable(page, size, sortBy, sortDir);
+        Page<Product> products = productService.getAllProducts(pageable);
+        ListResponse<Product> listResponse = createListResponse(products);
+        
+        return ResponseEntity.ok(listResponse);
     }
     
     @GetMapping("/{id}")
@@ -58,14 +70,23 @@ public class ProductController {
     // Search Operations
     
     @GetMapping("/search")
-    public ResponseEntity<Page<Product>> searchProducts(
+    public ResponseEntity<ListResponse<Product>> searchProducts(
         @RequestParam(required = false) String name,
         @RequestParam(required = false) String sku,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) String brand,
-        Pageable pageable) {
+        @RequestParam(name = "page", defaultValue = "1") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size,
+        @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
+        @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir) {
+        
+        // Create a Pageable object with the given page, size, sortBy, and sortDir
+        Pageable pageable = createPageable(page, size, sortBy, sortDir);
+        Page<Product> products = productService.searchProducts(name, sku, category, brand, pageable);
+        ListResponse<Product> listResponse = createListResponse(products);
+        
         return ResponseEntity.ok(
-            productService.searchProducts(name, sku, category, brand, pageable)
+            listResponse
         );
     }
     
@@ -164,17 +185,34 @@ public class ProductController {
     }
     
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<Product>> getProductsByCategory(
+    public ResponseEntity<ListResponse<Product>> getProductsByCategory(
         @PathVariable String categoryId,  // Changed from UUID to String
-        Pageable pageable) {
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+        @RequestParam(name = "page", defaultValue = "1") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size,
+        @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
+        @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir) {
+        
+        // Create a Pageable object with the given page, size, sortBy, and sortDir
+        Pageable pageable = createPageable(page, size, sortBy, sortDir);
+        Page<Product> products = productService.getProductsByCategory(categoryId, pageable);
+        ListResponse<Product> listResponse = createListResponse(products);
+        return ResponseEntity.ok(listResponse);
     }
     
     @GetMapping("/brand/{brand}")
-    public ResponseEntity<Page<Product>> getProductsByBrand(
+    public ResponseEntity<ListResponse<Product>> getProductsByBrand(
         @PathVariable String brand,
-        Pageable pageable) {
-        return ResponseEntity.ok(productService.getProductsByBrand(brand, pageable));
+        @RequestParam(name = "page", defaultValue = "1") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size,
+        @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
+        @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir) {
+        
+        // Create a Pageable object with the given page, size, sortBy, and sortDir
+        Pageable pageable = createPageable(page, size, sortBy, sortDir);
+        Page<Product> products = productService.getProductsByBrand(brand, pageable);
+        ListResponse<Product> listResponse = createListResponse(products);
+        
+        return ResponseEntity.ok(listResponse);
     }
     
     // Additional Attributes Management
@@ -193,5 +231,23 @@ public class ProductController {
         @PathVariable String key) {
         Product updatedProduct = productService.removeProductAttribute(id, key);
         return ResponseEntity.ok(updatedProduct);
+    }
+    
+    private Pageable createPageable(int page, int size, String sortBy, String sortDir) {
+        return PageRequest.
+            of(Math.max(page - 1, 0),
+                size > 0 ? size : 20,
+                sortDir.equals("asc") ? org.springframework.data.domain.Sort.by(sortBy).ascending() : org.springframework.data.domain.Sort.by(sortBy).descending());
+    }
+    
+    private ListResponse<Product> createListResponse(Page<Product> products) {
+        return new ListResponse<>(
+            products.getContent(),
+            products.getNumber() + 1,
+            products.getSize(),
+            products.getTotalElements(),
+            products.getTotalPages(),
+            products.isFirst(),
+            products.isLast());
     }
 }

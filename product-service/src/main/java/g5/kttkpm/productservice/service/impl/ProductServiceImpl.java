@@ -44,15 +44,15 @@ public class ProductServiceImpl implements ProductService {
     
     @Override
     public Product getProductById(String id) {
-        return productRepository.findById(id)
+        return productRepository.findByProductId(id)
             .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
     
     @Override
     public Product createProduct(Product product) {
         // Set initial values
-        if (product.getId() == null || product.getId().isEmpty()) {
-            product.setId(UUID.randomUUID().toString());
+        if (product.getProductId() == null || product.getProductId().isEmpty()) {
+            product.setProductId(UUID.randomUUID().toString());
         }
         
         LocalDateTime now = LocalDateTime.now();
@@ -239,7 +239,7 @@ public class ProductServiceImpl implements ProductService {
         }
         
         // Using the nested class we added to Product
-        product.setMainCategory(categoryId, category.getName());
+        product.setMainCategory(categoryId);
         product.setUpdatedAt(LocalDateTime.now());
         
         return productRepository.save(product);
@@ -256,7 +256,7 @@ public class ProductServiceImpl implements ProductService {
         }
         
         // Using the nested class we added to Product
-        product.addCategory(categoryId, category.getName());
+        product.addCategory(categoryId);
         product.setUpdatedAt(LocalDateTime.now());
         
         return productRepository.save(product);
@@ -285,9 +285,7 @@ public class ProductServiceImpl implements ProductService {
         
         // Add additional categories
         if (product.getAdditionalCategories() != null) {
-            product.getAdditionalCategories().forEach(catRef ->
-                categoryIds.add(catRef.getCategoryId())
-            );
+            categoryIds.addAll(product.getAdditionalCategories());
         }
         
         // Fetch all categories in parallel

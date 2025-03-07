@@ -1,15 +1,14 @@
 package g5.kttkpm.productservice.model;
 
 import lombok.*;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -17,8 +16,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Document(collection = "products")
 public class Product {
-    @MongoId
+    @Id
     private String id;
+    
+    private String productId;
     
     // Basic product information
     private String name;
@@ -28,10 +29,9 @@ public class Product {
     
     // Main Category
     private String mainCategoryId;
-    private String mainCategoryName;
     
     // Additional categories
-    private List<CategoryReference> additionalCategories = new ArrayList<>();
+    private List<String> additionalCategories = new ArrayList<>();
     
     // Pricing details
     private BigDecimal basePrice;
@@ -79,15 +79,6 @@ public class Product {
         private LocalDateTime changedAt;
         private String changedBy;
         private QuantityChangeReason reason;
-    }
-    
-    // Nested class to store category references
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CategoryReference {
-        private String categoryId;
-        private String categoryName;
     }
     
     // Enums for tracking changes
@@ -155,15 +146,14 @@ public class Product {
     }
     
     // Utility method to add a category
-    public void addCategory(String categoryId, String categoryName) {
+    public void addCategory(String categoryId) {
         // Initialize additionalCategories if null
         if (this.additionalCategories == null) {
             this.additionalCategories = new ArrayList<>();
         }
         
-        CategoryReference categoryRef = new CategoryReference(categoryId, categoryName);
         if (!containsCategory(categoryId)) {
-            additionalCategories.add(categoryRef);
+            additionalCategories.add(categoryId);
         }
     }
     
@@ -178,22 +168,21 @@ public class Product {
         }
         
         return additionalCategories.stream()
-            .anyMatch(cat -> cat.getCategoryId().equals(categoryId));
+            .anyMatch(cat -> cat.equals(categoryId));
     }
     
     // Utility method to set main category
-    public void setMainCategory(String categoryId, String categoryName) {
+    public void setMainCategory(String categoryId) {
         // Initialize additionalCategories if null
         if (this.additionalCategories == null) {
             this.additionalCategories = new ArrayList<>();
         }
         
         // If it was in additional categories, remove it first
-        additionalCategories.removeIf(cat -> cat.getCategoryId().equals(categoryId));
+        additionalCategories.removeIf(cat -> cat.equals(categoryId));
         
         // Set as main category
         this.mainCategoryId = categoryId;
-        this.mainCategoryName = categoryName;
     }
     
     // Utility method to remove a category
@@ -201,10 +190,9 @@ public class Product {
         // If it's the main category, clear it
         if (mainCategoryId != null && mainCategoryId.equals(categoryId)) {
             mainCategoryId = null;
-            mainCategoryName = null;
         } else {
             // Otherwise remove from additional categories
-            additionalCategories.removeIf(cat -> cat.getCategoryId().equals(categoryId));
+            additionalCategories.removeIf(cat -> cat.equals(categoryId));
         }
     }
 }
