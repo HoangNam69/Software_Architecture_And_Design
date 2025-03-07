@@ -1,0 +1,15 @@
+server:
+  port: 8083
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      uri: mongodb://${spring.data.mongodb.username}:${spring.data.mongodb.password}@punshub.top:27017/${spring.data.mongodb.database}?authSource=admin
+      auto-index-creation: true
+      username: admin
+      password: sapassword
+      database: product-db
+services:
+  category-service:
+    url: http://localhost:8082/api/v1/categories
