@@ -6,7 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/files")
@@ -17,11 +20,16 @@ public class S3Controller {
     private final S3Service s3Service;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(
+    public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("productId") String productId) {
         String fileUrl = s3Service.uploadFile(file, productId);
-        return ResponseEntity.ok("Upload successful. File URL: " + fileUrl);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "File created");
+        response.put("url", URI.create(fileUrl));
+        
+        return ResponseEntity.created(URI.create(fileUrl)).body(response);
     }
 
     @GetMapping

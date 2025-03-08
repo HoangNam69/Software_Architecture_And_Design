@@ -8,30 +8,24 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.net.URI;
-
 @Configuration
 public class S3Config {
-
-    @Value("${aws.accessKeyId}")
+    
+    @Value("${aws.access-key-id}")
     private String accessKeyId;
-
-    @Value("${aws.secretAccessKey}")
+    
+    @Value("${aws.secret-access-key}")
     private String secretAccessKey;
-
-    @Value("${aws.s3.region}")
+    
+    @Value("${aws.region}")
     private String region;
-
-    @Value("${aws.s3.endpoint}")
-    private String endpoint;
-
+    
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
-                .endpointOverride(URI.create(endpoint)) // Chỉ định endpoint tùy chỉnh
-                .build();
+            .region(Region.of(region))
+            .credentialsProvider(StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+            )).build();
     }
 }
