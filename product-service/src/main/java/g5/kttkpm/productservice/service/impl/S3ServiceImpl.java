@@ -1,7 +1,9 @@
 package g5.kttkpm.productservice.service.impl;
 
+import g5.kttkpm.productservice.model.Product;
 import g5.kttkpm.productservice.model.ProductImage;
 import g5.kttkpm.productservice.repo.ProductImageRepository;
+import g5.kttkpm.productservice.repo.ProductRepository;
 import g5.kttkpm.productservice.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +23,7 @@ public class S3ServiceImpl implements S3Service {
 
     private final S3Client s3Client;
     private final ProductImageRepository productImageRepository;
+    private final ProductRepository productRepository;
 
     @Value("${aws.bucket-name}")
     private String bucketName;
@@ -48,10 +52,22 @@ public class S3ServiceImpl implements S3Service {
                 request,
                 software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes())
             );
-            
+
+            Optional<Product> productOtp = productRepository.findByProductId(productId);
+            if (productOtp.isEmpty()) {
+                throw new RuntimeException("Product not found");
+            }
+
             String imageUrl = "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
-            productImageRepository.save(new ProductImage(null, productId, imageUrl));
-            
+
+            Optional<ProductImage> productImageOpt = productImageRepository.findByProductId(productId);
+            if (productImageOpt.isEmpty()) {
+                productImageRepository.save(new ProductImage(null, productId, List.of(imageUrl)));
+            } else {
+                List<String> imageUrls = productImageOpt.get().getImageUrl();
+                imageUrls.add(imageUrl);
+                productImageRepository.save(new ProductImage(productImageOpt.get().getId(), productId, imageUrls));
+            }
             return imageUrl;
         } catch (IOException e) {
             throw new RuntimeException("Error uploading file to S3", e);
@@ -93,13 +109,13 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public List<String> listFiles() {
+    public List<ProductImage> listFiles() {
         ListObjectsRequest request = ListObjectsRequest.builder().bucket(bucketName).build();
         ListObjectsResponse response = s3Client.listObjects(request);
 
-        return response.contents().stream()
-                .map(s3Object -> getFileUrl(s3Object.key()))
-                .collect(Collectors.toList());
+        List<ProductImage> productImages = productImageRepository.findAll();
+
+        return productImages;
     }
 
     @Override

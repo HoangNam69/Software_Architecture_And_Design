@@ -4,6 +4,8 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 @Document(collection = "product_images")
 @Getter
 @Setter
@@ -13,6 +15,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ProductImage {
     @Id
     private String id;
-    private String productId;  // Liên kết với product
-    private String imageUrl;   // Đường dẫn ảnh trên S3
+    private String productId;  
+    private List<String> imageUrl;
 }

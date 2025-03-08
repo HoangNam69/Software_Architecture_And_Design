@@ -1,5 +1,6 @@
 package g5.kttkpm.productservice.controller;
 
+import g5.kttkpm.productservice.model.ProductImage;
 import g5.kttkpm.productservice.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/files")
+@RequestMapping("/api/v1/products/files")
 @RequiredArgsConstructor
 @CrossOrigin
 public class S3Controller {
@@ -33,7 +34,7 @@ public class S3Controller {
     }
 
     @GetMapping
-    public ResponseEntity<List<String>> listFiles() {
+    public ResponseEntity<List<ProductImage>> listFiles() {
         return ResponseEntity.ok(s3Service.listFiles());
     }
 
