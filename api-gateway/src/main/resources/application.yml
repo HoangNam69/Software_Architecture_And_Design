@@ -40,6 +40,12 @@ spring:
             - Path=/api/v1/**
           filters:
             - StripPrefix=0
+        - id: order-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/v1/orders/**
+          filters:
+            - StripPrefix=0
         # Ví dụ về routing cho các service khác:
         # - id: product-service
         #   uri: http://localhost:8082

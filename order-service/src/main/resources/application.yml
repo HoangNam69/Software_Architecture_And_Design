@@ -1,3 +1,17 @@
+server:
+  port: 8085
+
 spring:
   application:
     name: order-service
+  data:
+    mongodb:
+      uri: mongodb://${spring.data.mongodb.username}:${spring.data.mongodb.password}@punshub.top:27017/${spring.data.mongodb.database}?authSource=admin
+      auto-index-creation: true
+      username: admin
+      password: sapassword
+      database: order-db
+
+services:
+  product-service:
+    url: http://localhost:8080/api/v1/products
