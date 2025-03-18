@@ -14,18 +14,37 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Order {
-    @Id
-    private String id = UUID.randomUUID().toString();
 
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
     private String customerAddress;
     private int totalAmount;
     private String status;
+
+    private String paymentOrderCode;
+    private String paymentUrl;
+    private String paymentMethod;
+    private String paymentTransactionId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

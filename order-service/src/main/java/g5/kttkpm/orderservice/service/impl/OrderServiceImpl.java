@@ -1,17 +1,17 @@
 package g5.kttkpm.orderservice.service.impl;
 
 import g5.kttkpm.orderservice.client.ProductClient;
-import g5.kttkpm.orderservice.dto.*;
-import g5.kttkpm.orderservice.entity.*;
-import g5.kttkpm.orderservice.repo.*;
+import g5.kttkpm.orderservice.dto.OrderRequest;
+import g5.kttkpm.orderservice.dto.OrderResponse;
+import g5.kttkpm.orderservice.entity.Order;
+import g5.kttkpm.orderservice.entity.OrderItem;
+import g5.kttkpm.orderservice.repo.OrderRepository;
 import g5.kttkpm.orderservice.service.OrderService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,14 +21,24 @@ public class OrderServiceImpl implements OrderService {
     private final ProductClient productClient;
 
     @Override
+    @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) {
         List<OrderItem> orderItems = new ArrayList<>();
         int totalAmount = 0;
 
-        for (OrderItemDTO item : orderRequest.getItems()) {
-            ProductDTO product = productClient.getProductById(item.getProductId());
+        Order order = Order.builder()
+                .customerName(orderRequest.getCustomerName())
+                .customerEmail(orderRequest.getCustomerEmail())
+                .customerPhone(orderRequest.getCustomerPhone())
+                .customerAddress(orderRequest.getCustomerAddress())
+                .status("PENDING")
+                .build();
+
+        for (var item : orderRequest.getItems()) {
+            var product = productClient.getProductById(item.getProductId());
 
             OrderItem orderItem = OrderItem.builder()
+                    .order(order)
                     .productId(product.getId())
                     .productName(product.getName())
                     .quantity(item.getQuantity())
@@ -40,34 +50,18 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
         }
 
-        Order order = Order.builder()
-                .id(UUID.randomUUID().toString())
-                .customerName(orderRequest.getCustomerName())
-                .customerEmail(orderRequest.getCustomerEmail())
-                .customerPhone(orderRequest.getCustomerPhone())
-                .customerAddress(orderRequest.getCustomerAddress())
-                .totalAmount(totalAmount)
-                .status("PENDING")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .items(orderItems)
-                .build();
+        order.setItems(orderItems);
+        order.setTotalAmount(totalAmount);
+        order = orderRepository.save(order);
 
-        orderRepository.save(order);
-
-        return new OrderResponse(order.getId(), order.getStatus(), totalAmount, order.getCustomerName(), order.getCustomerPhone());
+        return new OrderResponse(String.valueOf(order.getId()), order.getStatus(), totalAmount, order.getCustomerName(), order.getCustomerPhone());
     }
 
     @Override
     public List<OrderResponse> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
-
-        return orders.stream().map(order -> new OrderResponse(
-                order.getId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                order.getCustomerName(),
-                order.getCustomerPhone()
-        )).toList();
+        return orders.stream()
+                .map(order -> new OrderResponse(String.valueOf(order.getId()), order.getStatus(), order.getTotalAmount(), order.getCustomerName(), order.getCustomerPhone()))
+                .toList();
     }
 }
