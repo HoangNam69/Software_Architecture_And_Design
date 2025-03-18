@@ -2,6 +2,7 @@ package g5.kttkpm.orderservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
@@ -22,6 +23,6 @@ public class OrderItem {
     private String productId;
     private String productName;
     private int quantity;
-    private int pricePerUnit;
-    private int totalPrice;
+    private BigDecimal pricePerUnit;
+    private BigDecimal totalPrice;
 }

@@ -2,6 +2,8 @@ package g5.kttkpm.orderservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +25,7 @@ public class Order {
     private String customerEmail;
     private String customerPhone;
     private String customerAddress;
-    private int totalAmount;
+    private BigDecimal totalAmount;
     private String status;
 
     private String paymentOrderCode;

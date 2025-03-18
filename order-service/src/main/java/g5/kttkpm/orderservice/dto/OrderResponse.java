@@ -2,13 +2,15 @@ package g5.kttkpm.orderservice.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderResponse {
-    private String orderId;
+    private Long orderId;
     private String status;
-    private int totalAmount;
+    private BigDecimal totalAmount;
     private String customerName;
     private String customerPhone;
 }

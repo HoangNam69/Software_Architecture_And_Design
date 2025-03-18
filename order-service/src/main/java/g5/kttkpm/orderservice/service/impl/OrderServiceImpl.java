@@ -10,8 +10,10 @@ import g5.kttkpm.orderservice.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) {
         List<OrderItem> orderItems = new ArrayList<>();
-        int totalAmount = 0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         Order order = Order.builder()
                 .customerName(orderRequest.getCustomerName())
@@ -37,16 +39,23 @@ public class OrderServiceImpl implements OrderService {
         for (var item : orderRequest.getItems()) {
             var product = productClient.getProductById(item.getProductId());
 
+            if (product == null) {
+                throw new RuntimeException("Product not found: " + item.getProductId());
+            }
+
+            BigDecimal productPrice = product.getCurrentPrice();
+            BigDecimal itemTotalPrice = productPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .productId(product.getId())
                     .productName(product.getName())
                     .quantity(item.getQuantity())
-                    .pricePerUnit(product.getPrice())
-                    .totalPrice(product.getPrice() * item.getQuantity())
+                    .pricePerUnit(productPrice)
+                    .totalPrice(itemTotalPrice)
                     .build();
 
-            totalAmount += orderItem.getTotalPrice();
+            totalAmount = totalAmount.add(itemTotalPrice);
             orderItems.add(orderItem);
         }
 
@@ -54,14 +63,14 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(totalAmount);
         order = orderRepository.save(order);
 
-        return new OrderResponse(String.valueOf(order.getId()), order.getStatus(), totalAmount, order.getCustomerName(), order.getCustomerPhone());
+        return new OrderResponse(order.getId(), order.getStatus(), totalAmount, order.getCustomerName(), order.getCustomerPhone());
     }
 
     @Override
     public List<OrderResponse> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
         return orders.stream()
-                .map(order -> new OrderResponse(String.valueOf(order.getId()), order.getStatus(), order.getTotalAmount(), order.getCustomerName(), order.getCustomerPhone()))
+                .map(order -> new OrderResponse(order.getId(), order.getStatus(), order.getTotalAmount(), order.getCustomerName(), order.getCustomerPhone()))
                 .toList();
     }
 }
