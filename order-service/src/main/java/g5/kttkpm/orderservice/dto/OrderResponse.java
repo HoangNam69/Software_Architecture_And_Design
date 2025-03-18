@@ -1,8 +1,6 @@
 package g5.kttkpm.orderservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -11,4 +9,6 @@ public class OrderResponse {
     private String orderId;
     private String status;
     private int totalAmount;
+    private String customerName;
+    private String customerPhone;
 }

@@ -1,13 +1,9 @@
 package g5.kttkpm.orderservice.service.impl;
 
 import g5.kttkpm.orderservice.client.ProductClient;
-import g5.kttkpm.orderservice.dto.OrderItemDTO;
-import g5.kttkpm.orderservice.dto.OrderRequest;
-import g5.kttkpm.orderservice.dto.OrderResponse;
-import g5.kttkpm.orderservice.dto.ProductDTO;
-import g5.kttkpm.orderservice.entity.Order;
-import g5.kttkpm.orderservice.entity.OrderItem;
-import g5.kttkpm.orderservice.repo.OrderRepository;
+import g5.kttkpm.orderservice.dto.*;
+import g5.kttkpm.orderservice.entity.*;
+import g5.kttkpm.orderservice.repo.*;
 import g5.kttkpm.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,33 +28,46 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemDTO item : orderRequest.getItems()) {
             ProductDTO product = productClient.getProductById(item.getProductId());
 
-            if (product == null) {
-                throw new RuntimeException("Product not found: " + item.getProductId());
-            }
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setProductId(product.getId());
-            orderItem.setProductName(product.getName());
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setPricePerUnit(product.getPrice());
-            orderItem.setTotalPrice(product.getPrice() * item.getQuantity());
+            OrderItem orderItem = OrderItem.builder()
+                    .productId(product.getId())
+                    .productName(product.getName())
+                    .quantity(item.getQuantity())
+                    .pricePerUnit(product.getPrice())
+                    .totalPrice(product.getPrice() * item.getQuantity())
+                    .build();
 
             totalAmount += orderItem.getTotalPrice();
             orderItems.add(orderItem);
         }
 
-        Order order = new Order();
-        order.setCustomerName(orderRequest.getCustomerName());
-        order.setCustomerEmail(orderRequest.getCustomerEmail());
-        order.setCustomerPhone(orderRequest.getCustomerPhone());
-        order.setCustomerAddress(orderRequest.getCustomerAddress());
-        order.setItems(orderItems);
-        order.setTotalAmount(totalAmount);
-        order.setStatus("PENDING");
-        order.setCreatedAt(LocalDateTime.now());
+        Order order = Order.builder()
+                .id(UUID.randomUUID().toString())
+                .customerName(orderRequest.getCustomerName())
+                .customerEmail(orderRequest.getCustomerEmail())
+                .customerPhone(orderRequest.getCustomerPhone())
+                .customerAddress(orderRequest.getCustomerAddress())
+                .totalAmount(totalAmount)
+                .status("PENDING")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .items(orderItems)
+                .build();
 
         orderRepository.save(order);
 
-        return new OrderResponse(order.getId(), order.getStatus(), totalAmount);
+        return new OrderResponse(order.getId(), order.getStatus(), totalAmount, order.getCustomerName(), order.getCustomerPhone());
+    }
+
+    @Override
+    public List<OrderResponse> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+
+        return orders.stream().map(order -> new OrderResponse(
+                order.getId(),
+                order.getStatus(),
+                order.getTotalAmount(),
+                order.getCustomerName(),
+                order.getCustomerPhone()
+        )).toList();
     }
 }
