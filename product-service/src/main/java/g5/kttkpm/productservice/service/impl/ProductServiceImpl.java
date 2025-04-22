@@ -378,4 +378,9 @@ public class ProductServiceImpl implements ProductService {
         
         return productRepository.save(product);
     }
+    
+    @Override
+    public Page<Product> getAllProductsByCategoryId(String categoryId, Pageable pageable) {
+        return productRepository.findByMainCategoryIdOrAdditionalCategoriesContaining(categoryId, categoryId, pageable);
+    }
 }

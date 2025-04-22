@@ -29,16 +29,24 @@ public class ProductController {
     
     @GetMapping
     public ResponseEntity<ListResponse<Product>> getAllProducts(
+        @RequestParam(name = "category_id", required = false) String categoryId,
         @RequestParam(name = "page", defaultValue = "1") int page,
         @RequestParam(name = "size", defaultValue = "20") int size,
-        @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
-        @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir
+        @RequestParam(name = "sort_by", defaultValue = "currentPrice") String sortBy,
+        @RequestParam(name = "sort_dir", defaultValue = "desc") String sortDir
     ) {
         // Create a Pageable object with the given page, size, sortBy, and sortDir
         Pageable pageable = createPageable(page, size, sortBy, sortDir);
+        
+        // If get by category
+        if (categoryId != null) {
+            Page<Product> products = productService.getAllProductsByCategoryId(categoryId, pageable);
+            ListResponse<Product> listResponse =createListResponse(products);
+            return ResponseEntity.ok(listResponse);
+        }
+        
         Page<Product> products = productService.getAllProducts(pageable);
         ListResponse<Product> listResponse = createListResponse(products);
-        
         return ResponseEntity.ok(listResponse);
     }
     

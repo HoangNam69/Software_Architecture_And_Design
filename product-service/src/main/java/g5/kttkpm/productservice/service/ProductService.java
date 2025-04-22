@@ -47,4 +47,6 @@ public interface ProductService {
     // Additional attributes management
     Product updateProductAttributes(String id, Map<String, Object> attributes);
     Product removeProductAttribute(String id, String key);
+    
+    Page<Product> getAllProductsByCategoryId(String categoryId, Pageable pageable);
 }

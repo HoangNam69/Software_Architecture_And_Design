@@ -13,3 +13,9 @@ spring:
 services:
   category-service:
     url: http://localhost:8082/api/v1/categories
+
+aws:
+  access-key-id: AKIA6JQ45COKWDDJY65X
+  secret-access-key: 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
+  region: ap-southeast-2
+  bucket-name: architecture-system-design

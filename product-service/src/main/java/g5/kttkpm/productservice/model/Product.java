@@ -26,6 +26,8 @@ public class Product {
     private String sku;
     private String description;
     private String brand;
+    @Builder.Default
+    private String thumbnailUrl = "https://architecture-system-design.s3.ap-southeast-2.amazonaws.com/defaults/default-product-image.png";
     
     // Main Category
     private String mainCategoryId;
