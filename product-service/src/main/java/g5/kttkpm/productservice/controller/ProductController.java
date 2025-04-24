@@ -15,18 +15,20 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
     private final ProductService productService;
-    
+
     @Autowired
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
-    
+
     // Basic CRUD Operations
-    
+
     @GetMapping
     public ResponseEntity<ListResponse<Product>> getAllProducts(
         @RequestParam(name = "category_id", required = false) String categoryId,
@@ -37,30 +39,30 @@ public class ProductController {
     ) {
         // Create a Pageable object with the given page, size, sortBy, and sortDir
         Pageable pageable = createPageable(page, size, sortBy, sortDir);
-        
+
         // If get by category
         if (categoryId != null) {
             Page<Product> products = productService.getAllProductsByCategoryId(categoryId, pageable);
             ListResponse<Product> listResponse =createListResponse(products);
             return ResponseEntity.ok(listResponse);
         }
-        
+
         Page<Product> products = productService.getAllProducts(pageable);
         ListResponse<Product> listResponse = createListResponse(products);
         return ResponseEntity.ok(listResponse);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
-    
+
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         Product createdProduct = productService.createProduct(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(
         @PathVariable String id,
@@ -68,16 +70,17 @@ public class ProductController {
         Product updatedProduct = productService.updateProduct(id, product);
         return ResponseEntity.ok(updatedProduct);
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     // Search Operations
-    
+
     @GetMapping("/search")
+    @RateLimiter(name = "productSearchLimiter", fallbackMethod = "fallbackSearch")
     public ResponseEntity<ListResponse<Product>> searchProducts(
         @RequestParam(required = false) String name,
         @RequestParam(required = false) String sku,
@@ -87,14 +90,30 @@ public class ProductController {
         @RequestParam(name = "size", defaultValue = "20") int size,
         @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
         @RequestParam(name = "sort_dir", defaultValue = "asc") String sortDir) {
-        
+
         // Create a Pageable object with the given page, size, sortBy, and sortDir
         Pageable pageable = createPageable(page, size, sortBy, sortDir);
         Page<Product> products = productService.searchProducts(name, sku, category, brand, pageable);
         ListResponse<Product> listResponse = createListResponse(products);
-        
+
         return ResponseEntity.ok(
             listResponse
+        );
+    }
+
+    public ResponseEntity<ListResponse<Product>> fallbackSearch(
+        String name, String sku, String category, String brand,
+        int page, int size, String sortBy, String sortDir, Throwable t) {
+        return ResponseEntity.status(429).body(
+            new ListResponse<>(
+                java.util.Collections.emptyList(), // content
+                1,     // page
+                20,    // size
+                0L,    // total elements
+                0,     // total pages
+                true,  // isFirst
+                true   // isLast
+            )
         );
     }
     
