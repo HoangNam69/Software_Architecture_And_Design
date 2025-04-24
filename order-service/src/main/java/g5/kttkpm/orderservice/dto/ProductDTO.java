@@ -12,4 +12,9 @@ public class ProductDTO {
     private String name;
     private String description;
     private BigDecimal currentPrice; // Đảm bảo sử dụng BigDecimal
+    
+    // Để quản lý số lượng sản phẩm trên hệ thống
+    private Integer totalQuantity;
+    private Integer availableQuantity;
+    private Integer reservedQuantity;
 }

@@ -16,13 +16,17 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
+    @Column(name = "product_id")
     private String productId;
+    
+    @Column(name = "product_name")
     private String productName;
+    
     private int quantity;
+    
+    @Column(name = "price_per_unit")
     private BigDecimal pricePerUnit;
+    
+    @Column(name = "total_price")
     private BigDecimal totalPrice;
 }

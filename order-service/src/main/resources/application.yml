@@ -23,3 +23,5 @@ spring:
 services:
   product-service:
     url: http://localhost:8083/api/v1/products
+  payment-service:
+    url: http://localhost:8084/api/v1/payments

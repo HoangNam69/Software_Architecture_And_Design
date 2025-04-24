@@ -7,8 +7,9 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderResponse {
-    private Long orderId;
+    private String id;
     private String status;
     private BigDecimal totalAmount;
     private String customerName;
