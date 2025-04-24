@@ -7,6 +7,7 @@ import g5.kttkpm.orderservice.dto.PaymentRequestDTO;
 import g5.kttkpm.orderservice.dto.PaymentResponseDTO;
 import g5.kttkpm.orderservice.entity.Order;
 import g5.kttkpm.orderservice.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,24 @@ public class OrderController {
     private final OrderService orderService;
     private final PaymentClient paymentClient;
 
+    @PostMapping
+    @CircuitBreaker(name = "productService", fallbackMethod = "fallbackCreateOrder")
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+        return ResponseEntity.ok(orderService.createOrder(request));
+    }
+
+    public ResponseEntity<OrderResponse> fallbackCreateOrder(OrderRequest request, Throwable t) {
+        OrderResponse fallbackResponse = new OrderResponse();
+        fallbackResponse.setOrderId(null);
+        fallbackResponse.setStatus("FAILED");
+        fallbackResponse.setCustomerName(request.getCustomerName());
+        fallbackResponse.setCustomerPhone(request.getCustomerPhone());
+        return ResponseEntity.status(503).body(fallbackResponse);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
 //    @PostMapping("/create")
 //    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
 //        return ResponseEntity.ok(orderService.createOrder(request));
