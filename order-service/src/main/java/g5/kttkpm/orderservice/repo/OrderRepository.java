@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    
     @Transactional
     @Modifying
-    @Query("update Order o set o.paymentOrderCode = ?1, o.paymentUrl = ?2, o.status = ?3")
-    void updatePaymentOrderCodeAndPaymentUrlAndStatusBy(String paymentOrderCode, String paymentUrl, String status);
+    @Query("update Order o set o.paymentUrl = ?1, o.status = ?2 where o.paymentOrderCode = ?3")
+    void updatePaymentUrlAndStatusByPaymentOrderCode(String paymentUrl, String status, String paymentOrderCode);
+    
     
     Order findByPaymentOrderCode(String paymentOrderCode);
 }

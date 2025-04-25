@@ -90,8 +90,8 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
-    public void updateOrderPaymentStatus(Order order) {
-        orderRepository.updatePaymentOrderCodeAndPaymentUrlAndStatusBy(
+    public void updatePaymentUrlAndStatusByPaymentOrderCode(Order order) {
+        orderRepository.updatePaymentUrlAndStatusByPaymentOrderCode(
             order.getPaymentOrderCode(),
             order.getPaymentUrl(),
             order.getStatus());

@@ -42,7 +42,7 @@ public class PaymentServiceImpl implements PaymentService {
         
         // Gửi thông báo đến order-service
         try {
-            restTemplate.postForEntity(orderServiceNotificationUrl, notification, Void.class);
+            restTemplate.postForEntity(orderServiceNotificationUrl + "/payment/notification", notification, Void.class);
         } catch (Exception e) {
             // Xử lý lỗi khi gửi thông báo
             e.printStackTrace();

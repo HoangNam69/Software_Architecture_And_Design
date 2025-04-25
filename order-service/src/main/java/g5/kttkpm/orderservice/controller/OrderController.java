@@ -1,10 +1,7 @@
 package g5.kttkpm.orderservice.controller;
 
 import g5.kttkpm.orderservice.client.PaymentClient;
-import g5.kttkpm.orderservice.dto.OrderRequest;
-import g5.kttkpm.orderservice.dto.PaymentNotificationDTO;
-import g5.kttkpm.orderservice.dto.PaymentRequestDTO;
-import g5.kttkpm.orderservice.dto.PaymentResponseDTO;
+import g5.kttkpm.orderservice.dto.*;
 import g5.kttkpm.orderservice.entity.Order;
 import g5.kttkpm.orderservice.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -13,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,13 +23,12 @@ public class OrderController {
 
     @PostMapping
     @CircuitBreaker(name = "productService", fallbackMethod = "fallbackCreateOrder")
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
 
     public ResponseEntity<OrderResponse> fallbackCreateOrder(OrderRequest request, Throwable t) {
         OrderResponse fallbackResponse = new OrderResponse();
-        fallbackResponse.setOrderId(null);
         fallbackResponse.setStatus("FAILED");
         fallbackResponse.setCustomerName(request.getCustomerName());
         fallbackResponse.setCustomerPhone(request.getCustomerPhone());
@@ -39,8 +36,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+    public ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());}
 //    @PostMapping("/create")
 //    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
 //        return ResponseEntity.ok(orderService.createOrder(request));
@@ -50,6 +47,11 @@ public class OrderController {
 //    public ResponseEntity<List<OrderResponse>> getAllOrders() {
 //        return ResponseEntity.ok(orderService.getAllOrders());
 //    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
+    }
     
     /**
      * API để tạo đơn hàng và chuyển đến thanh toán
@@ -76,8 +78,8 @@ public class OrderController {
                 .collect(Collectors.toList()));
             
             // Cấu hình URL callback
-            paymentRequest.setReturnUrl("http://localhost:8080/api/v1/orders/payment/success?orderId=" + order.getId());
-            paymentRequest.setCancelUrl("http://localhost:8080/api/v1/orders/payment/cancel?orderId=" + order.getId());
+            paymentRequest.setReturnUrl("http://localhost:5173/orders/payment/success?orderId=" + order.getId());
+            paymentRequest.setCancelUrl("http://localhost:5173/orders/payment/cancel?orderId=" + order.getId());
             
             // Thông tin người mua (nếu có)
             paymentRequest.setBuyerName(order.getCustomerName());
@@ -96,7 +98,7 @@ public class OrderController {
                 order.setPaymentUrl(paymentData.paymentUrl());
                 order.setStatus("AWAITING_PAYMENT");
                 
-                orderService.updateOrderPaymentStatus(order);
+                orderService.updatePaymentUrlAndStatusByPaymentOrderCode(order);
                 
                 // Trả về URL thanh toán cho frontend
                 return ResponseEntity.ok(paymentData);
@@ -105,7 +107,7 @@ public class OrderController {
                 order.setPaymentOrderCode("");
                 order.setPaymentUrl("");
                 order.setStatus("PAYMENT_FAILED");
-                orderService.updateOrderPaymentStatus(order);
+                orderService.updatePaymentUrlAndStatusByPaymentOrderCode(order);
                 
                 return ResponseEntity.badRequest().body("Không thể tạo liên kết thanh toán");
             }
@@ -138,7 +140,7 @@ public class OrderController {
         if (order != null) {
             // Cập nhật trạng thái đơn hàng
             order.setStatus("CANCELLED");
-            orderService.updateOrderPaymentStatus(order);
+            orderService.updatePaymentUrlAndStatusByPaymentOrderCode(order);
             
             return ResponseEntity.ok("Đơn hàng đã bị hủy");
         }

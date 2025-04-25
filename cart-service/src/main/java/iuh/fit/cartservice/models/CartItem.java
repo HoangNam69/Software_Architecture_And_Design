@@ -18,4 +18,5 @@ public class CartItem implements Serializable {
     String productName;
     int quantity;
     BigDecimal price;
+    String productThumbnail;
 }

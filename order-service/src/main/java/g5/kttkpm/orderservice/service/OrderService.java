@@ -10,7 +10,7 @@ public interface OrderService {
     List<Order> getAllOrders();
     Order getOrderById(Long orderId);
     
-    void updateOrderPaymentStatus(Order order);
+    void updatePaymentUrlAndStatusByPaymentOrderCode(Order order);
     
     Order findByPaymentOrderCode(String s);
     
