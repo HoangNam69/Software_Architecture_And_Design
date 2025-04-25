@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,16 +16,16 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
 public class OrderController {
-
+    
     private final OrderService orderService;
     private final PaymentClient paymentClient;
-
+    
     @PostMapping
     @CircuitBreaker(name = "productService", fallbackMethod = "fallbackCreateOrder")
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
-
+    
     public ResponseEntity<OrderResponse> fallbackCreateOrder(OrderRequest request, Throwable t) {
         OrderResponse fallbackResponse = new OrderResponse();
         fallbackResponse.setStatus("FAILED");
@@ -34,19 +33,16 @@ public class OrderController {
         fallbackResponse.setCustomerPhone(request.getCustomerPhone());
         return ResponseEntity.status(503).body(fallbackResponse);
     }
-
+    
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());}
-//    @PostMapping("/create")
-//    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
-//        return ResponseEntity.ok(orderService.createOrder(request));
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<OrderResponse>> getAllOrders() {
-//        return ResponseEntity.ok(orderService.getAllOrders());
-//    }
+    public ResponseEntity<List<Order>> getAllOrders(
+        @RequestParam(name = "user_id", required = false) String userId
+    ) {
+        if (userId != null)
+            return ResponseEntity.ok(orderService.getOrderByUserId(userId));
+        
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
     
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {

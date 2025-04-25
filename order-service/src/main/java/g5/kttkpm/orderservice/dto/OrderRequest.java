@@ -7,6 +7,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderRequest {
+    private String userId;
     private String customerName;
     private String customerEmail;
     private String customerPhone;

@@ -15,4 +15,6 @@ public interface OrderService {
     Order findByPaymentOrderCode(String s);
     
     void updateOrder(Order order);
+    
+    List<Order> getOrderByUserId(String userId);
 }

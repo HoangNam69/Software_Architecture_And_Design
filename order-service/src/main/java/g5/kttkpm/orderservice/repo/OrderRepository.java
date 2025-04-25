@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     
@@ -17,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     
     Order findByPaymentOrderCode(String paymentOrderCode);
+    
+    List<Order> findAllByUserId(String userId);
 }
