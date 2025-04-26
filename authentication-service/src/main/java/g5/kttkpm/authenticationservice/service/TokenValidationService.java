@@ -57,7 +57,25 @@ public class TokenValidationService {
                 Map.class
             );
             
-            Map<String, Object> tokenInfo = response.getBody();
+            Map<String, Object> tokenResponse = response.getBody();
+            
+            Map<String, Object> tokenInfo = new HashMap<>();
+            if (tokenResponse != null) {
+                
+                // Copy relevant claims to user info
+                if (tokenResponse.containsKey("exp")) tokenInfo.put("exp", tokenResponse.get("exp"));
+                if (tokenResponse.containsKey("jti")) tokenInfo.put("jti", tokenResponse.get("jti"));
+                if (tokenResponse.containsKey("sub")) tokenInfo.put("sub", tokenResponse.get("sub"));
+                if (tokenResponse.containsKey("sid")) tokenInfo.put("sid", tokenResponse.get("sid"));
+                if (tokenResponse.containsKey("email_verified")) tokenInfo.put("email_verified", tokenResponse.get("email_verified"));
+                if (tokenResponse.containsKey("name")) tokenInfo.put("name", tokenResponse.get("name"));
+                if (tokenResponse.containsKey("preferred_username")) tokenInfo.put("preferred_username", tokenResponse.get("preferred_username"));
+                if (tokenResponse.containsKey("given_name")) tokenInfo.put("given_name", tokenResponse.get("given_name"));
+                if (tokenResponse.containsKey("family_name")) tokenInfo.put("family_name", tokenResponse.get("family_name"));
+                if (tokenResponse.containsKey("email")) tokenInfo.put("email", tokenResponse.get("email"));
+                if (tokenResponse.containsKey("phone")) tokenInfo.put("phone", tokenResponse.get("phone"));
+                if (tokenResponse.containsKey("active")) tokenInfo.put("active", tokenResponse.get("active"));
+            }
             
             // Check if token is active
             if (tokenInfo != null && tokenInfo.containsKey("active") && (Boolean) tokenInfo.get("active")) {
@@ -113,6 +131,7 @@ public class TokenValidationService {
                 if (tokenInfo.containsKey("name")) userInfo.put("name", tokenInfo.get("name"));
                 if (tokenInfo.containsKey("given_name")) userInfo.put("given_name", tokenInfo.get("given_name"));
                 if (tokenInfo.containsKey("family_name")) userInfo.put("family_name", tokenInfo.get("family_name"));
+                if (tokenInfo.containsKey("phone")) userInfo.put("phone", tokenInfo.get("phone"));
                 
                 return userInfo;
             }

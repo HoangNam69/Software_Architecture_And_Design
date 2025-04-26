@@ -3,6 +3,12 @@ package g5.kttkpm.authenticationservice.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class JwtResponse {
+    @JsonProperty("status")
+    private boolean status;
+    
+    @JsonProperty("message")
+    private String message;
+    
     @JsonProperty("access_token")
     private String accessToken;
     
@@ -57,5 +63,21 @@ public class JwtResponse {
     
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
+    
+    public boolean isStatus() {
+        return status;
+    }
+    
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

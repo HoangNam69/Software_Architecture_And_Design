@@ -1,0 +1,29 @@
+server:
+  port: 8083
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      uri: mongodb://${spring.data.mongodb.username}:${spring.data.mongodb.password}@punshub.top:27017/${spring.data.mongodb.database}?authSource=admin
+      auto-index-creation: true
+      username: admin
+      password: sapassword
+      database: product-db
+services:
+  category-service:
+    url: http://localhost:8082/api/v1/categories
+
+aws:
+  access-key-id: AKIA6JQ45COKWDDJY65X
+  secret-access-key: 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
+  region: ap-southeast-2
+  bucket-name: architecture-system-design
+
+resilience4j:
+  ratelimiter:
+    instances:
+      productSearchLimiter:
+        limitForPeriod: 5 # 10 requests per second
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0
