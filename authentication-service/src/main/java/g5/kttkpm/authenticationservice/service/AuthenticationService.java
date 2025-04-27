@@ -24,6 +24,9 @@ public class AuthenticationService {
     @Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}")
     private String issuerUri;
     
+    @Value("${spring.security.oauth2.client.registration.keycloak.scope}")
+    private String scopes;
+    
     private final RestTemplate restTemplate = new RestTemplate();
     
     public JwtResponse login(LoginPayload loginPayload) {
@@ -40,7 +43,7 @@ public class AuthenticationService {
         formData.add("client_secret", clientSecret);
         formData.add("username", loginPayload.username());
         formData.add("password", loginPayload.password());
-        formData.add("scope", "openid profile email phone");
+        formData.add("scope", scopes);
         
         // Create request entity
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);

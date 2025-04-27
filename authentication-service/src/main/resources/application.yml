@@ -8,7 +8,7 @@ spring:
           keycloak:
             client-id: tmdt-back-end
             client-secret: TYwKjdo1iRpwhMJfaWCqjN46ro0eNG8W
-            scope: openid email profile phone
+            scope: openid email profile phone roles
             authorization-grant-type: authorization_code
         provider:
           keycloak:
