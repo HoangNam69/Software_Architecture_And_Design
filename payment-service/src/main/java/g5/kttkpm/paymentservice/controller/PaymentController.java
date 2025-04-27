@@ -196,4 +196,40 @@ public class PaymentController {
         
         return ResponseEntity.ok("Thanh toán đã bị hủy!");
     }
+
+    /**
+     * Lấy thông tin payment theo id
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {
+        Payment payment = paymentService.findById(id);
+        if (payment == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(payment);
+    }
+
+    /**
+     * Cập nhật payment theo id
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Payment> updatePayment(@PathVariable Long id, @RequestBody Payment updatedPayment) {
+        Payment payment = paymentService.updatePayment(id, updatedPayment);
+        if (payment == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(payment);
+    }
+
+    /**
+     * Xoá payment theo id
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePayment(@PathVariable Long id) {
+        boolean deleted = paymentService.deletePayment(id);
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
+    }
 }

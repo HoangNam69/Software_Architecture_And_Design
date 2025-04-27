@@ -49,4 +49,31 @@ public class PaymentServiceImpl implements PaymentService {
             // Có thể triển khai retry mechanism hoặc message queue sau này
         }
     }
+
+    @Override
+    public Payment findById(Long id) {
+        return paymentRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public Payment updatePayment(Long id, Payment updatedPayment) {
+        return paymentRepository.findById(id)
+                .map(existingPayment -> {
+                    existingPayment.setAmount(updatedPayment.getAmount());
+                    existingPayment.setPaymentMethod(updatedPayment.getPaymentMethod());
+                    existingPayment.setStatus(updatedPayment.getStatus());
+                    existingPayment.setTransactionId(updatedPayment.getTransactionId());
+                    return paymentRepository.save(existingPayment);
+                })
+                .orElse(null);
+    }
+
+    @Override
+    public boolean deletePayment(Long id) {
+        if (paymentRepository.existsById(id)) {
+            paymentRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
