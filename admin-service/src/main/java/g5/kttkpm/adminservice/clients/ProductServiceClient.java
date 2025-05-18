@@ -1,17 +1,21 @@
 package g5.kttkpm.adminservice.clients;
 
 import g5.kttkpm.adminservice.dtos.ProductDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Component
+@Slf4j
 public class ProductServiceClient {
 
     private final WebClient webClient;
 
-    public ProductServiceClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8083/api/v1/products").build();
+    public ProductServiceClient(WebClient.Builder webClientBuilder, @Value("${services.product}") String productRoot) {
+        this.webClient = webClientBuilder.baseUrl(productRoot).build();
+        log.info("Product service client initialized with baseUrl: {}", productRoot);
     }
 
     // Lấy tất cả sản phẩm
@@ -54,5 +58,13 @@ public class ProductServiceClient {
                 .uri("/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class);
+    }
+    
+    public void checkStatus() {
+        webClient.get()
+            .uri("/cb-status")
+            .retrieve()
+            .bodyToMono(Void.class)
+            .block();
     }
 }

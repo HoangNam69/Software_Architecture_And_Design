@@ -4,6 +4,8 @@ import g5.kttkpm.adminservice.dtos.LoginPayload;
 import g5.kttkpm.adminservice.dtos.RegistrationPayload;
 import g5.kttkpm.adminservice.responses.JwtResponse;
 import g5.kttkpm.adminservice.responses.RegistrationResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -12,12 +14,14 @@ import org.springframework.core.ParameterizedTypeReference;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class AuthServiceClient {
 
     private final WebClient webClient;
-
-    public AuthServiceClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8081/api/v1/auth").build();
+    
+    public AuthServiceClient(WebClient.Builder webClientBuilder, @Value("${services.auth}") String authRoot) {
+        this.webClient = webClientBuilder.baseUrl(authRoot).build();
+        log.info("Auth service client initialized with baseUrl: {}", authRoot);
     }
 
     // Đăng nhập
@@ -55,7 +59,8 @@ public class AuthServiceClient {
                 .uri("/token/validate")
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
+                .bodyToMono(new ParameterizedTypeReference<>() {
+                });
     }
 
     // Lấy thông tin user từ token
@@ -64,6 +69,15 @@ public class AuthServiceClient {
                 .uri("/token/userinfo")
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
+                .bodyToMono(new ParameterizedTypeReference<>() {
+                });
+    }
+    
+    public void checkStatus() {
+        webClient.get()
+            .uri("/cb-status")
+            .retrieve()
+            .bodyToMono(Void.class)
+            .block();
     }
 }

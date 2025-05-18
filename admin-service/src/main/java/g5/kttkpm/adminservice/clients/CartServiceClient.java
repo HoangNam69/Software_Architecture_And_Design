@@ -2,6 +2,8 @@ package g5.kttkpm.adminservice.clients;
 
 import g5.kttkpm.adminservice.dtos.CartDTO;
 import g5.kttkpm.adminservice.dtos.CartItemDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -9,12 +11,14 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 @Component
+@Slf4j
 public class CartServiceClient {
 
     private final WebClient webClient;
-
-    public CartServiceClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8086/api/v1").build();
+    
+    public CartServiceClient(WebClient.Builder webClientBuilder, @Value("${services.cart}") String cartRoot) {
+        this.webClient = webClientBuilder.baseUrl(cartRoot).build();
+        log.info("Cart service client initialized with baseUrl: {}", cartRoot);
     }
 
     // Get cart by userId
@@ -64,5 +68,13 @@ public class CartServiceClient {
                 .uri("/total/{userId}", userId)
                 .retrieve()
                 .bodyToMono(BigDecimal.class);
+    }
+    
+    public void checkStatus() {
+        webClient.get()
+            .uri("/cart/cb-status")
+            .retrieve()
+            .bodyToMono(Void.class)
+            .block();
     }
 }
