@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+app:
+  frontend:
+    url: http://localhost:5173
+  auth:
+    callback-url: http://localhost:8081/api/v1/auth/google/callback

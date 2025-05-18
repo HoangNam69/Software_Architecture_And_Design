@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  frontend:
+    url: http://frontend:5173
+  auth:
+    callback-url: http://authentication-service:8081/api/v1/auth/google/callback

@@ -1,6 +1,8 @@
 spring:
   application:
     name: authentication-service
+  profiles:
+    active: dev
   security:
     oauth2:
       client:
@@ -19,12 +21,6 @@ spring:
 server:
   port: 8081
 
-app:
-  frontend:
-    url: http://localhost:5173
-  auth:
-    callback-url: http://localhost:8081/api/v1/auth/google/callback
-
 keycloak:
   auth-server-url: https://auth.punshub.top
   realm: tmdt
@@ -33,3 +29,8 @@ keycloak:
     username: root
     password: root
 
+logging:
+  level:
+    root: off
+    org.springframework: info
+    g5.kttkpm: info
