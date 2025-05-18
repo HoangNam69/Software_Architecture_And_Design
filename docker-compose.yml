@@ -8,7 +8,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=https://auth.punshub.top/realms/tmdt
       - SERVER_PORT=8080
     restart: always
@@ -21,8 +21,11 @@ services:
     ports:
       - "8087:8087"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8087
+    depends_on:
+      api-gateway:
+        condition: service_started
     restart: always
     networks:
       - microservices-network
@@ -33,9 +36,12 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8081
       - KC_URL=https://auth.punshub.top
+    depends_on:
+      api-gateway:
+        condition: service_started
     restart: always
     networks:
       - microservices-network
@@ -46,10 +52,13 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8086
       - SPRING_DATA_REDIS_HOST=punshub.top
       - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      api-gateway:
+        condition: service_started
     restart: always
     networks:
       - microservices-network
@@ -60,11 +69,14 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8082
       - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/category-service
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=sapassword
+    depends_on:
+      api-gateway:
+        condition: service_started
     restart: always
     networks:
       - microservices-network
@@ -75,14 +87,16 @@ services:
     ports:
       - "8085:8085"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8085
       - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/order-service
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=sapassword
-      - SERVICES_PRODUCT_SERVICE_URL=http://product-service:8083/api/v1/products
-      - SERVICES_PAYMENT_SERVICE_URL=http://payment-service:8084/api/v1/payments
+      - SERVICES_PRODUCT_SERVICE_URL=http://api-gateway:8080/api/v1/products
+      - SERVICES_PAYMENT_SERVICE_URL=http://api-gateway:8080/api/v1/payments
     depends_on:
+      api-gateway:
+        condition: service_started
       product-service:
         condition: service_started
       payment-service:
@@ -97,12 +111,15 @@ services:
     ports:
       - "8084:8084"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8084
       - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/payment-service
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=sapassword
-      - ORDER_SERVICE_NOTIFICATION_URL=http://order-service:8085/api/v1/orders
+      - ORDER_SERVICE_NOTIFICATION_URL=http://api-gateway:8080/api/v1/orders
+    depends_on:
+      api-gateway:
+        condition: service_started
     restart: always
     networks:
       - microservices-network
@@ -113,14 +130,16 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8083
       - SPRING_DATA_MONGODB_URI=mongodb://admin:sapassword@punshub.top:27017/product-db?authSource=admin
       - SPRING_DATA_MONGODB_DATABASE=product-db
       - SPRING_DATA_MONGODB_USERNAME=admin
       - SPRING_DATA_MONGODB_PASSWORD=sapassword
-      - SERVICES_CATEGORY_SERVICE_URL=http://category-service:8082/api/v1/categories
+      - SERVICES_CATEGORY_SERVICE_URL=http://api-gateway:8080/api/v1/categories
     depends_on:
+      api-gateway:
+        condition: service_started
       category-service:
         condition: service_started
     restart: always

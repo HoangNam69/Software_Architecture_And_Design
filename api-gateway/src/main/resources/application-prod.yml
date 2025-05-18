@@ -63,6 +63,6 @@ spring:
 
 app:
   cors:
-    allowed-origin-patterns: http://frontend:*,http://admin-service:*
+    allowed-origin-patterns: http://host.docker.internal:*,http://admin-service:*,http://localhost:*
   auth:
     token-validation-url: http://authentication-service:8081/api/v1/auth/token/validate
