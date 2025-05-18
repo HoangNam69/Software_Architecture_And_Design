@@ -78,15 +78,13 @@ public class CategoryServiceImpl implements CategoryService {
     
     @Override
     public void deleteCategory(UUID id) {
-        Category category = getCategoryById(id);
-        
-        // Check if the category has children
-        if (category.getChildren() != null && !category.getChildren().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Cannot delete category with children. Delete children first or reassign them.");
-        }
-        
         categoryRepository.deleteById(id);
+    }
+    
+    @Override
+    public void deleteCategoryAndChildren(UUID id) {
+        Category category = getCategoryById(id);
+        categoryRepository.delete(category); // CascadeType.ALL will handle deleting all children
     }
     
     @Override

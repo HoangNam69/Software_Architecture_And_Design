@@ -5,12 +5,17 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "categories")
 @JsonIdentityInfo(
@@ -18,6 +23,7 @@ import java.util.UUID;
     property = "id")
 public class Category {
     
+    // Getters and Setters
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -30,7 +36,7 @@ public class Category {
     @JsonBackReference
     private Category parent;
     
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private Set<Category> children = new HashSet<>();
     
@@ -47,47 +53,6 @@ public class Category {
     public Category(UUID id, String name) {
         this.id = id;
         this.name = name;
-    }
-    
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-    
-    public void setId(UUID id) {
-        this.id = id;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public Category getParent() {
-        return parent;
-    }
-    
-    public void setParent(Category parent) {
-        this.parent = parent;
-    }
-    
-    public Set<Category> getChildren() {
-        return children;
-    }
-    
-    public void setChildren(Set<Category> children) {
-        this.children = children;
-    }
-    
-    public Map<String, String> getMetadata() {
-        return metadata;
-    }
-    
-    public void setMetadata(Map<String, String> metadata) {
-        this.metadata = metadata;
     }
     
     // Helper method to add a child category
@@ -113,5 +78,10 @@ public class Category {
     
     public void removeMetadata(String key) {
         metadata.remove(key);
+    }
+    
+    // Helper method to check if this category has children
+    public boolean hasChildren() {
+        return children != null && !children.isEmpty();
     }
 }

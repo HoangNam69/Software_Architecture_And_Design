@@ -20,14 +20,17 @@ public interface CategoryService {
     
     void deleteCategory(UUID id);
     
+    // New method to delete a category and all its children
+    void deleteCategoryAndChildren(UUID id);
+    
     List<Category> searchCategoriesByName(String name);
     
-    // New methods for subcategories
+    // Methods for subcategories
     List<Category> getSubcategories(UUID parentId);
     
     Category addSubcategory(UUID parentId, CategoryPayload categoryPayload);
     
-    // New methods for metadata
+    // Methods for metadata
     Map<String, String> getCategoryMetadata(UUID categoryId);
     
     Category updateCategoryMetadata(UUID categoryId, Map<String, String> metadata);
