@@ -1,0 +1,68 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: ${app.cors.allowed-origin-patterns}
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS
+            allowedHeaders: '*'
+            allowCredentials: true
+      routes:
+        - id: admin-service
+          uri: http://admin-service:8087
+          predicates:
+            - Path=/api/v1/admin/**
+          filters:
+            - StripPrefix=0
+
+        - id: auth-service
+          uri: http://authentication-service:8081
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - StripPrefix=0
+
+        - id: category-service
+          uri: http://category-service:8082
+          predicates:
+            - Path=/api/v1/categories/**
+          filters:
+            - StripPrefix=0
+
+        - id: product-service
+          uri: http://product-service:8083
+          predicates:
+            - Path=/api/v1/products/**
+          filters:
+            - StripPrefix=0
+
+        - id: payment-service
+          uri: http://payment-service:8084
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - StripPrefix=0
+
+        - id: order-service
+          uri: http://order-service:8085
+          predicates:
+            - Path=/api/v1/orders/**
+          filters:
+            - StripPrefix=0
+
+        - id: cart-service
+          uri: http://cart-service:8086
+          predicates:
+            - Path=/api/v1/**
+          filters:
+            - StripPrefix=0
+
+app:
+  cors:
+    allowed-origin-patterns: http://frontend:*,http://admin-service:*
+  auth:
+    token-validation-url: http://authentication-service:8081/api/v1/auth/token/validate
