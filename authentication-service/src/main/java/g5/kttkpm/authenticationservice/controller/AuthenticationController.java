@@ -30,4 +30,12 @@ public class AuthenticationController {
         authenticationService.logout(refreshToken);
         return ResponseEntity.ok().build();
     }
+    
+    @PostMapping("/refresh-token")
+    public ResponseEntity<JwtResponse> refreshToken(@RequestParam("refresh_token") String refreshToken) {
+        JwtResponse jwtResponse = authenticationService.refreshToken(refreshToken);
+        if (jwtResponse.isStatus())
+            return ResponseEntity.ok(jwtResponse);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jwtResponse);
+    }
 }

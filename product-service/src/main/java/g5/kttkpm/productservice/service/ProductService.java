@@ -8,45 +8,50 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface ProductService {
     
-    // Basic CRUD operations
+    // Basic CRUD Operations
     Page<Product> getAllProducts(Pageable pageable);
     Product getProductById(String id);
     Product createProduct(Product product);
-    Product updateProduct(String id, Product product);
+    Product updateProduct(String id, Product productDetails);
     void deleteProduct(String id);
     
-    // Search operations
-    Page<Product> searchProducts(String name, String sku, String category, String brand, Pageable pageable);
+    // Search Operations
+    Page<Product> searchProducts(String name, String sku, String category, String brand,
+                                 BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     
-    // Price management
+    // Advanced Search with flexible criteria
+    Page<Product> searchProductsAdvanced(Map<String, Object> searchCriteria, Pageable pageable);
+    
+    // Auto-complete search
+    Page<Product> autoCompleteSearch(String query, Pageable pageable);
+    
+    // Price Management
     Product updateProductPrice(String id, BigDecimal newPrice, Product.PriceChangeReason reason, String changedBy);
     List<Product.PriceHistory> getPriceHistory(String id);
     
-    // Inventory management
+    // Inventory Management
     Product updateProductInventory(String id, Integer newQuantity, Product.QuantityChangeReason reason, String changedBy);
     List<Product.QuantityHistory> getQuantityHistory(String id);
     
-    // Category management
+    // Category Management
     Product setMainCategory(String productId, String categoryId);
     Product addCategory(String productId, String categoryId);
     Product removeCategory(String productId, String categoryId);
     List<CategoryDTO> getProductCategories(String productId);
     
-    // Status management
+    // Status Management
     Product updateProductStatus(String id, Product.ProductStatus status);
     
-    // Batch operations
+    // Batch Operations
     List<Product> createProducts(List<Product> products);
-    Page<Product> getProductsByCategory(String categoryId, Pageable pageable); // Changed from UUID to String
+    Page<Product> getProductsByCategory(String categoryId, Pageable pageable);
     Page<Product> getProductsByBrand(String brand, Pageable pageable);
     
-    // Additional attributes management
+    // Additional Attributes Management
     Product updateProductAttributes(String id, Map<String, Object> attributes);
     Product removeProductAttribute(String id, String key);
-    
     Page<Product> getAllProductsByCategoryId(String categoryId, Pageable pageable);
 }
