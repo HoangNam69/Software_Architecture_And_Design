@@ -20,7 +20,7 @@ Trong đó:
     - `test`: Sửa lỗi hoặc thêm mới về test
 
 - `<scope>`: là mô tả về phạm vi các file hoặc module bị ảnh hưởng bởi commit
-    - Ví dụ: `login`, `database`, `wiki`, ...
-
+    - Ví dụ: `login`, `database`, `wiki`, ......
+              
 - `message`: là nội dung của commit, mô tả về những thay đổi cụ thể
     - Ví dụ: `fix bug login`, `add new feature login`, `update README.md`, ...
