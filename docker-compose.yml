@@ -111,11 +111,20 @@ services:
     ports:
       - "8084:8084"
     environment:
+      - SPRING_APPLICATION_NAME=payment-service
       - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8084
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=org.postgresql.Driver
       - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/payment-service
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=sapassword
+      - SPRING_JPA_HIBERNATE_DDL-AUTO=update
+      - SPRING_JPA_SHOW-SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - PAYOS_CLIENT_ID=abc
+      - PAYOS_API_KEY=abc
+      - PAYOS_CHECKSUM_KEY=acb
       - ORDER_SERVICE_NOTIFICATION_URL=http://api-gateway:8080/api/v1/orders
     depends_on:
       api-gateway:
@@ -130,13 +139,22 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - SPRING_APPLICATION_NAME=product-service
       - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8083
       - SPRING_DATA_MONGODB_URI=mongodb://admin:sapassword@punshub.top:27017/product-db?authSource=admin
       - SPRING_DATA_MONGODB_DATABASE=product-db
       - SPRING_DATA_MONGODB_USERNAME=admin
       - SPRING_DATA_MONGODB_PASSWORD=sapassword
+      - SPRING_DATA_MONGODB_AUTO_INDEX_CREATION=true
       - SERVICES_CATEGORY_SERVICE_URL=http://api-gateway:8080/api/v1/categories
+      - AWS_ACCESS_KEY_ID=abc
+      - AWS_SECRET_ACCESS_KEY=abc
+      - AWS_REGION=ap-southeast-2
+      - AWS_BUCKET_NAME=architecture-system-design
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_LIMITFORPERIOD=5
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_LIMITREFRESHPERIOD=1s
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_TIMEOUTDURATION=0
     depends_on:
       api-gateway:
         condition: service_started
