@@ -136,6 +136,24 @@ pipeline {
             }
         }
 
+        stage('Check Environment Files') {
+            steps {
+                script {
+                    if (env.CHANGED_SERVICES) {
+                        env.CHANGED_SERVICES.split().each { service ->
+                            sh """
+                            if [ ! -f "/var/env-config/${service}.env" ]; then
+                                echo "Warning: Environment file for ${service} is missing"
+                                # Create an empty file or copy from a template
+                                touch "/var/env-config/${service}.env"
+                            fi
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Deploy Services') {
             steps {
                 script {
@@ -172,7 +190,7 @@ pipeline {
                                 echo "Found environment backup for ${service}, restoring..."
 
                                 # Wait a bit for container to be fully up
-                                sleep 10
+                                sleep 3m
 
                                 # Check if container is running before trying to restore environment
                                 CONTAINER_STATUS=\$(docker inspect --format='{{.State.Status}}' ${service} 2>/dev/null || echo "not_found")
