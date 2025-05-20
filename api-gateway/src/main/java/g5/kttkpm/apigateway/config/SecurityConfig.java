@@ -30,6 +30,8 @@ public class SecurityConfig {
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/api/v1/auth/**").permitAll()
+                // Cho phép truy cập các đường dẫn Actuator mà không cần xác thực
+                .pathMatchers("/actuator/**").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

@@ -69,9 +69,18 @@ spring:
           filters:
             - StripPrefix=0
 
-
 app:
   cors:
     allowed-origin-patterns: http://localhost:*,https://*.localhost:*
   auth:
     token-validation-url: http://localhost:8081/api/v1/auth/token/validate
+  # Service URLs for dev environment
+  services:
+    admin-service: http://localhost:8087
+    authentication-service: http://localhost:8081
+    cart-service: http://localhost:8086
+    category-service: http://localhost:8082
+    order-service: http://localhost:8085
+    payment-service: http://localhost:8084
+    product-service: http://localhost:8083
+    report-service: http://localhost:8088
