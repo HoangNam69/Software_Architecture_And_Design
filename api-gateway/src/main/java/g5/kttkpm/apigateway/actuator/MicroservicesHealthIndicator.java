@@ -99,7 +99,7 @@ public class MicroservicesHealthIndicator implements HealthIndicator {
                     })
                     .block();
                 
-                if (response != null && response.contains("UP")) {
+                if (response != null && response.contains("OK")) {
                     details.put(serviceName, "UP");
                 } else {
                     details.put(serviceName, response != null ? response : "DOWN");
