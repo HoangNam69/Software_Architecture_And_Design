@@ -34,3 +34,11 @@ logging:
     root: off
     org.springframework: info
     g5.kttkpm: info
+
+resilience4j:
+  ratelimiter:
+    instances:
+      loginRateLimiter:
+        limitForPeriod: 5 # 5 requests per second
+        limitRefreshPeriod: 10s # 10 seconds
+        timeoutDuration: 0 # No timeout

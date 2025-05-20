@@ -10,6 +10,13 @@ spring:
     username: admin
     password: sapassword
 
+    hikari:
+      maximum-pool-size: 10          # Số kết nối tối đa trong pool (điều chỉnh theo nhu cầu)
+      minimum-idle: 5                # Số kết nối idle tối thiểu
+      idle-timeout: 30000            # Thời gian (ms) một kết nối có thể idle trước khi bị loại bỏ
+      connection-timeout: 30000      # Thời gian chờ tối đa (ms) để lấy kết nối từ pool
+      max-lifetime: 1800000          # Thời gian tối đa (ms) một kết nối tồn tại trong pool
+
   jpa:
     hibernate:
       ddl-auto: update

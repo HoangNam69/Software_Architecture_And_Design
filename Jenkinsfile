@@ -8,30 +8,27 @@ pipeline {
             }
         }
 
-        stage('Maven Build & Test') {
+        stage('Check Build & Test') {
             steps {
                 script {
                     // Kiểm tra Docker có tồn tại và có quyền truy cập
                     sh 'which docker || echo "Docker not found in PATH"'
                     sh 'docker --version || echo "Cannot execute Docker"'
 
-                    // Sử dụng Docker để chạy Maven
-                    sh '''
-                        docker run --rm \
-                        -v "$(pwd)":/app \
-                        -v "${HOME}/.m2":/root/.m2 \
-                        -w /app \
-                        maven:3.8-openjdk-17 \
-                        mvn clean install package -DskipTests
-                    '''
+                    // Hiển thị thông tin workspace hiện tại
+                    sh 'pwd'
+                    sh 'ls -la'
+                }
+            }
+        }
 
+        stage('Fix Maven Wrapper Permissions') {
+            steps {
+                script {
+                    // Set executable permissions on Maven wrapper scripts in all services
                     sh '''
-                        docker run --rm \
-                        -v "$(pwd)":/app \
-                        -v "${HOME}/.m2":/root/.m2 \
-                        -w /app \
-                        maven:3.8-openjdk-17 \
-                        mvn test
+                    find ./ -name "mvnw" -exec chmod +x {} \\;
+                    echo "Setting executable permissions on Maven wrapper scripts"
                     '''
                 }
             }
@@ -54,38 +51,19 @@ pipeline {
                 script {
                     // Hiển thị Docker path
                     sh 'which docker'
+                    sh 'docker ps -a'
 
-                    // Kiểm tra docker-compose
+                    // Always use docker compose plugin format (with space)
                     sh '''
-                    if command -v docker-compose &> /dev/null; then
-                        echo "docker-compose found"
-                        docker-compose --version
-                    elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
-                        echo "docker compose plugin found"
-                        docker compose version
-                        # Tạo symlink docker-compose nếu chỉ có docker compose plugin
-                        if ! command -v docker-compose &> /dev/null; then
-                            echo '#!/bin/bash' > docker-compose
-                            echo 'docker compose "$@"' >> docker-compose
-                            chmod +x docker-compose
-                        fi
-                    else
-                        echo "Neither docker-compose nor docker compose plugin found"
-                        exit 1
-                    fi
-                    '''
+                    echo "Using docker compose plugin"
+                    docker compose version
 
-                    // Build và deploy với Docker Compose
-                    sh '''
-                    if command -v docker-compose &> /dev/null; then
-                        docker-compose down || true
-                        docker-compose build
-                        docker-compose up -d
-                    else
-                        docker compose down || true
-                        docker compose build
-                        docker compose up -d
-                    fi
+                    # Stop any running containers
+                    docker compose down || true
+
+                    # Build and start the services
+                    docker compose build
+                    docker compose up -d
                     '''
                 }
             }
