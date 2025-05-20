@@ -41,31 +41,17 @@ pipeline {
                     sh 'which docker'
                     sh 'docker ps -a'
 
-                    // Kiểm tra docker-compose
+                    // Always use docker compose plugin format (with space)
                     sh '''
-                    if command -v docker-compose &> /dev/null; then
-                        echo "docker-compose found"
-                        docker-compose --version
-                    elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
-                        echo "docker compose plugin found"
-                        docker compose version
-                    else
-                        echo "Neither docker-compose nor docker compose plugin found"
-                        exit 1
-                    fi
-                    '''
+                    echo "Using docker compose plugin"
+                    docker compose version
 
-                    // Build và deploy với Docker Compose
-                    sh '''
-                    if command -v docker-compose &> /dev/null; then
-                        docker-compose down || true
-                        docker-compose build
-                        docker-compose up -d
-                    else
-                        docker compose down || true
-                        docker compose build
-                        docker compose up -d
-                    fi
+                    # Stop any running containers
+                    docker compose down || true
+
+                    # Build and start the services
+                    docker compose build
+                    docker compose up -d
                     '''
                 }
             }
