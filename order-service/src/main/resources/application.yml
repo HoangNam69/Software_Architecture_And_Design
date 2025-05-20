@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: order-service
+  profiles:
+    active: dev
 
   datasource:
     url: jdbc:postgresql://punshub.top:5432/order-service
@@ -13,15 +15,11 @@ spring:
 
   jpa:
     database: postgresql
-    show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
 
-services:
-  product-service:
-    url: http://localhost:8083/api/v1/products
-  payment-service:
-    url: http://localhost:8084/api/v1/payments
+logging:
+  level:
+    root: off
+    org.springframework: info
+    g5.kttkpm: info

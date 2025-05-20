@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+services:
+  product-service:
+    url: http://localhost:8080/api/v1/products
+  payment-service:
+    url: http://localhost:8080/api/v1/payments

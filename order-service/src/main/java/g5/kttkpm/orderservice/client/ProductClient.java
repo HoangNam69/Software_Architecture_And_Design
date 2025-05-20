@@ -19,7 +19,4 @@ public class ProductClient {
         return restTemplate.getForObject(productServiceUrl + "/" + productId, ProductDTO.class);
     }
     
-//    public Void updateProductQuantity(String productId, Integer buyAmount) {
-//
-//    }
 }

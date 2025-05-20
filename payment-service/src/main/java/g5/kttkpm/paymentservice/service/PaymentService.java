@@ -9,4 +9,10 @@ public interface PaymentService {
     Payment findByOrderCode(String orderCode);
     
     void notifyOrderService(Payment payment);
+
+    Payment findById(Long id);
+
+    Payment updatePayment(Long id, Payment payment);
+
+    boolean deletePayment(Long id);
 }

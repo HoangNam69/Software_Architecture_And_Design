@@ -49,6 +49,33 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
     
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order updatedOrder) {
+        Order existingOrder = orderService.getOrderById(id);
+        if (existingOrder == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        existingOrder.setStatus(updatedOrder.getStatus());
+        existingOrder.setCustomerName(updatedOrder.getCustomerName());
+        existingOrder.setCustomerEmail(updatedOrder.getCustomerEmail());
+        existingOrder.setCustomerPhone(updatedOrder.getCustomerPhone());
+        existingOrder.setCustomerAddress(updatedOrder.getCustomerAddress());
+
+        orderService.updateOrder(existingOrder);
+        return ResponseEntity.ok(existingOrder);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        Order existingOrder = orderService.getOrderById(id);
+        if (existingOrder == null) {
+            return ResponseEntity.notFound().build();
+        }
+        orderService.deleteOrderById(id);
+        return ResponseEntity.noContent().build();
+    }
+    
     /**
      * API để tạo đơn hàng và chuyển đến thanh toán
      */

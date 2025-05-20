@@ -36,10 +36,6 @@ public class AuthenticationGatewayFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
         
-        if (request.getURI().getPath().endsWith("confirm-webhook")) {
-            return chain.filter(exchange);
-        }
-        
         // Get Authorization header
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         

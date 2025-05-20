@@ -12,8 +12,6 @@ import java.util.Optional;
 public interface ProductRepository extends MongoRepository<Product, String> {
     Page<Product> findByBrandIgnoreCase(String brand, Pageable pageable);
     
-    
-    
     Optional<Product> findByProductId(String productId);
     
     Page<Product> findByMainCategoryIdOrAdditionalCategoriesContaining(String mainCategoryId, String additionalCategory, Pageable pageable);

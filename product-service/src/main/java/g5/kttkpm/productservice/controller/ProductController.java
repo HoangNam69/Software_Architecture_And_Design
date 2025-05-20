@@ -86,6 +86,8 @@ public class ProductController {
         @RequestParam(required = false) String sku,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) String brand,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice,
         @RequestParam(name = "page", defaultValue = "1") int page,
         @RequestParam(name = "size", defaultValue = "20") int size,
         @RequestParam(name = "sort_by", defaultValue = "name") String sortBy,
@@ -93,7 +95,7 @@ public class ProductController {
 
         // Create a Pageable object with the given page, size, sortBy, and sortDir
         Pageable pageable = createPageable(page, size, sortBy, sortDir);
-        Page<Product> products = productService.searchProducts(name, sku, category, brand, pageable);
+        Page<Product> products = productService.searchProducts(name, sku, category, brand, minPrice, maxPrice, pageable);
         ListResponse<Product> listResponse = createListResponse(products);
 
         return ResponseEntity.ok(
