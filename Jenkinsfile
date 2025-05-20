@@ -15,23 +15,26 @@ pipeline {
                     sh 'which docker || echo "Docker not found in PATH"'
                     sh 'docker --version || echo "Cannot execute Docker"'
 
-                    // Sử dụng Docker để chạy Maven
+                    // Hiển thị thông tin workspace hiện tại
+                    sh 'pwd'
+                    sh 'ls -la'
+
+                    // Sử dụng Maven trực tiếp nếu có sẵn, thay vì dùng Docker
                     sh '''
-                        docker run --rm \
-                        -v "$(pwd)":/app \
-                        -v "${HOME}/.m2":/root/.m2 \
-                        -w /app \
-                        maven:3.8-openjdk-17 \
-                        mvn clean install package -DskipTests
+                        if command -v mvn &> /dev/null; then
+                            echo "Using system Maven"
+                            mvn clean install package -DskipTests
+                        else
+                            echo "Maven not found, cannot proceed"
+                            exit 1
+                        fi
                     '''
 
                     sh '''
-                        docker run --rm \
-                        -v "$(pwd)":/app \
-                        -v "${HOME}/.m2":/root/.m2 \
-                        -w /app \
-                        maven:3.8-openjdk-17 \
-                        mvn test
+                        if command -v mvn &> /dev/null; then
+                            echo "Running tests with system Maven"
+                            mvn test
+                        fi
                     '''
                 }
             }
@@ -54,6 +57,7 @@ pipeline {
                 script {
                     // Hiển thị Docker path
                     sh 'which docker'
+                    sh 'docker ps -a'
 
                     // Kiểm tra docker-compose
                     sh '''
@@ -63,12 +67,6 @@ pipeline {
                     elif command -v docker &> /dev/null && docker compose version &> /dev/null; then
                         echo "docker compose plugin found"
                         docker compose version
-                        # Tạo symlink docker-compose nếu chỉ có docker compose plugin
-                        if ! command -v docker-compose &> /dev/null; then
-                            echo '#!/bin/bash' > docker-compose
-                            echo 'docker compose "$@"' >> docker-compose
-                            chmod +x docker-compose
-                        fi
                     else
                         echo "Neither docker-compose nor docker compose plugin found"
                         exit 1
