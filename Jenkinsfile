@@ -136,24 +136,6 @@ pipeline {
             }
         }
 
-        stage('Check Environment Files') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICES) {
-                        env.CHANGED_SERVICES.split().each { service ->
-                            sh """
-                            if [ ! -f "/var/env-config/${service}.env" ]; then
-                                echo "Warning: Environment file for ${service} is missing"
-                                # Create an empty file or copy from a template
-                                touch "/var/env-config/${service}.env"
-                            fi
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Deploy Services') {
             steps {
                 script {
@@ -240,8 +222,17 @@ pipeline {
                         TIMEOUT=300
                         START_TIME=$(date +%s)
 
-                        # Initial delay 3min to give services time to start
+                        # Initial delay 3min để cho services có thời gian khởi động
+                        echo "Waiting 3 minutes for services to start..."
                         sleep 3m
+
+                        # Lấy project name từ thư mục hiện tại hoặc từ docker-compose config
+                        PROJECT_NAME=$(basename $(pwd) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
+                        echo "Using project name prefix: $PROJECT_NAME"
+
+                        # Lấy danh sách tất cả container đang chạy
+                        echo "Currently running containers:"
+                        docker ps
 
                         # Check service health status
                         for service in $SERVICES_TO_CHECK; do
@@ -250,12 +241,36 @@ pipeline {
 
                             if [ $ELAPSED -gt $TIMEOUT ]; then
                                 echo "Timeout reached while checking services!"
-                                break
+                                exit 1
                             fi
 
-                            echo "Checking status of $service (elapsed time: ${ELAPSED}s)..."
-                            CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' $service 2>/dev/null || echo "not_found")
-                            echo "$service status: $CONTAINER_STATUS"
+                            echo "Checking status of service '$service' (elapsed time: ${ELAPSED}s)..."
+
+                            # Tìm kiếm container theo tên service, có thể là một phần của tên container
+                            CONTAINER_ID=$(docker ps --filter "name=${PROJECT_NAME}_${service}_" --format "{{.ID}}" | head -n 1)
+
+                            if [ -z "$CONTAINER_ID" ]; then
+                                echo "Container for service '$service' not found with prefix ${PROJECT_NAME}_${service}_"
+                                echo "Trying alternative container naming formats..."
+
+                                # Thử tìm container với các định dạng tên khác nhau
+                                CONTAINER_ID=$(docker ps --filter "name=${service}" --format "{{.ID}}" | head -n 1)
+                            fi
+
+                            if [ -n "$CONTAINER_ID" ]; then
+                                echo "Found container ID: $CONTAINER_ID for service '$service'"
+                                CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' $CONTAINER_ID)
+                                HEALTH_STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}N/A{{end}}' $CONTAINER_ID)
+
+                                echo "Service '$service' status: $CONTAINER_STATUS, health: $HEALTH_STATUS"
+
+                                if [ "$CONTAINER_STATUS" != "running" ]; then
+                                    echo "WARNING: Container for service '$service' is not running!"
+                                fi
+                            else {
+                                echo "WARNING: Could not find any container for service '$service'!"
+                            }
+                            fi
                         done
 
                         # Show final status of all containers
