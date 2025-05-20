@@ -110,21 +110,20 @@ public class OrderController {
             paymentRequest.setBuyerPhone(order.getCustomerPhone());
             
             // 3. Gọi đến payment-service để tạo liên kết thanh toán
-            ResponseEntity<PaymentResponseDTO> paymentResponse = paymentClient.getPaymentLink(paymentRequest);
+            PaymentResponseDTO paymentResponse = paymentClient.getPaymentLink(paymentRequest);
             
             // 4. Cập nhật thông tin đơn hàng với kết quả từ payment-service
-            if (paymentResponse.getStatusCode().is2xxSuccessful() && paymentResponse.getBody() != null) {
-                PaymentResponseDTO paymentData = paymentResponse.getBody();
+            if (paymentResponse != null) {
                 
                 // Cập nhật đơn hàng với mã thanh toán và URL
-                order.setPaymentOrderCode(paymentData.orderCode());
-                order.setPaymentUrl(paymentData.paymentUrl());
+                order.setPaymentOrderCode(paymentResponse.orderCode());
+                order.setPaymentUrl(paymentResponse.paymentUrl());
                 order.setStatus("AWAITING_PAYMENT");
                 
                 orderService.updatePaymentUrlAndStatusByPaymentOrderCode(order);
                 
                 // Trả về URL thanh toán cho frontend
-                return ResponseEntity.ok(paymentData);
+                return ResponseEntity.ok(paymentResponse);
             } else {
                 // Xử lý lỗi từ payment-service
                 order.setPaymentOrderCode("");

@@ -10,12 +10,14 @@ import g5.kttkpm.orderservice.repo.OrderRepository;
 import g5.kttkpm.orderservice.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -44,8 +46,9 @@ public class OrderServiceImpl implements OrderService {
             if (product == null) {
                 throw new RuntimeException("Product not found: " + item.getProductId());
             }
+            log.info(product.toString());
 
-            BigDecimal productPrice = product.getCurrentPrice();
+            BigDecimal productPrice = product.getCurrentPrice() != null ? product.getCurrentPrice() : product.getBasePrice();
             BigDecimal itemTotalPrice = productPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
 
             OrderItem orderItem = OrderItem.builder()
