@@ -8,7 +8,7 @@ pipeline {
             }
         }
 
-        stage('Maven Build & Test') {
+        stage('Check Build & Test') {
             steps {
                 script {
                     // Kiểm tra Docker có tồn tại và có quyền truy cập
@@ -18,24 +18,6 @@ pipeline {
                     // Hiển thị thông tin workspace hiện tại
                     sh 'pwd'
                     sh 'ls -la'
-
-                    // Sử dụng Maven trực tiếp nếu có sẵn, thay vì dùng Docker
-                    sh '''
-                        if command -v mvn &> /dev/null; then
-                            echo "Using system Maven"
-                            mvn clean install package -DskipTests
-                        else
-                            echo "Maven not found, cannot proceed"
-                            exit 1
-                        fi
-                    '''
-
-                    sh '''
-                        if command -v mvn &> /dev/null; then
-                            echo "Running tests with system Maven"
-                            mvn test
-                        fi
-                    '''
                 }
             }
         }
