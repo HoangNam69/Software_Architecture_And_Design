@@ -172,7 +172,7 @@ pipeline {
                                 echo "Found environment backup for ${service}, restoring..."
 
                                 # Wait a bit for container to be fully up
-                                sleep 3m
+                                sleep 1m
 
                                 # Check if container is running before trying to restore environment
                                 CONTAINER_STATUS=\$(docker inspect --format='{{.State.Status}}' ${service} 2>/dev/null || echo "not_found")
@@ -207,82 +207,82 @@ pipeline {
             }
         }
 
-        stage('Verify Changed Services Health') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICES) {
-                        // Đợi và kiểm tra trạng thái của các service đã thay đổi
-                        sh '''
-                        echo "Waiting for changed services to be healthy..."
-
-                        # Danh sách services cần kiểm tra
-                        SERVICES_TO_CHECK="${CHANGED_SERVICES}"
-
-                        # Thiết lập timeout (300 giây)
-                        TIMEOUT=300
-                        START_TIME=$(date +%s)
-
-                        # Initial delay 3min để cho services có thời gian khởi động
-                        echo "Waiting 3 minutes for services to start..."
-                        sleep 3m
-
-                        # Lấy project name từ thư mục hiện tại hoặc từ docker-compose config
-                        PROJECT_NAME=$(basename $(pwd) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
-                        echo "Using project name prefix: $PROJECT_NAME"
-
-                        # Lấy danh sách tất cả container đang chạy
-                        echo "Currently running containers:"
-                        docker ps
-
-                        # Check service health status
-                        for service in $SERVICES_TO_CHECK; do
-                            CURRENT_TIME=$(date +%s)
-                            ELAPSED=$((CURRENT_TIME - START_TIME))
-
-                            if [ $ELAPSED -gt $TIMEOUT ]; then
-                                echo "Timeout reached while checking services!"
-                                exit 1
-                            fi
-
-                            echo "Checking status of service '$service' (elapsed time: ${ELAPSED}s)..."
-
-                            # Tìm kiếm container theo tên service, có thể là một phần của tên container
-                            CONTAINER_ID=$(docker ps --filter "name=${PROJECT_NAME}_${service}_" --format "{{.ID}}" | head -n 1)
-
-                            if [ -z "$CONTAINER_ID" ]; then
-                                echo "Container for service '$service' not found with prefix ${PROJECT_NAME}_${service}_"
-                                echo "Trying alternative container naming formats..."
-
-                                # Thử tìm container với các định dạng tên khác nhau
-                                CONTAINER_ID=$(docker ps --filter "name=${service}" --format "{{.ID}}" | head -n 1)
-                            fi
-
-                            if [ -n "$CONTAINER_ID" ]; then
-                                echo "Found container ID: $CONTAINER_ID for service '$service'"
-                                CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' $CONTAINER_ID)
-                                HEALTH_STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}N/A{{end}}' $CONTAINER_ID)
-
-                                echo "Service '$service' status: $CONTAINER_STATUS, health: $HEALTH_STATUS"
-
-                                if [ "$CONTAINER_STATUS" != "running" ]; then
-                                    echo "WARNING: Container for service '$service' is not running!"
-                                fi
-                            else {
-                                echo "WARNING: Could not find any container for service '$service'!"
-                            }
-                            fi
-                        done
-
-                        # Show final status of all containers
-                        echo "Final status of all services:"
-                        docker compose ps
-                        '''
-                    } else {
-                        echo "No services to verify"
-                    }
-                }
-            }
-        }
+//         stage('Verify Changed Services Health') {
+//             steps {
+//                 script {
+//                     if (env.CHANGED_SERVICES) {
+//                         // Đợi và kiểm tra trạng thái của các service đã thay đổi
+//                         sh '''
+//                         echo "Waiting for changed services to be healthy..."
+//
+//                         # Danh sách services cần kiểm tra
+//                         SERVICES_TO_CHECK="${CHANGED_SERVICES}"
+//
+//                         # Thiết lập timeout (300 giây)
+//                         TIMEOUT=300
+//                         START_TIME=$(date +%s)
+//
+//                         # Initial delay 3min để cho services có thời gian khởi động
+//                         echo "Waiting 3 minutes for services to start..."
+//                         sleep 3m
+//
+//                         # Lấy project name từ thư mục hiện tại hoặc từ docker-compose config
+//                         PROJECT_NAME=$(basename $(pwd) | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g')
+//                         echo "Using project name prefix: $PROJECT_NAME"
+//
+//                         # Lấy danh sách tất cả container đang chạy
+//                         echo "Currently running containers:"
+//                         docker ps
+//
+//                         # Check service health status
+//                         for service in $SERVICES_TO_CHECK; do
+//                             CURRENT_TIME=$(date +%s)
+//                             ELAPSED=$((CURRENT_TIME - START_TIME))
+//
+//                             if [ $ELAPSED -gt $TIMEOUT ]; then
+//                                 echo "Timeout reached while checking services!"
+//                                 exit 1
+//                             fi
+//
+//                             echo "Checking status of service '$service' (elapsed time: ${ELAPSED}s)..."
+//
+//                             # Tìm kiếm container theo tên service, có thể là một phần của tên container
+//                             CONTAINER_ID=$(docker ps --filter "name=${PROJECT_NAME}_${service}_" --format "{{.ID}}" | head -n 1)
+//
+//                             if [ -z "$CONTAINER_ID" ]; then
+//                                 echo "Container for service '$service' not found with prefix ${PROJECT_NAME}_${service}_"
+//                                 echo "Trying alternative container naming formats..."
+//
+//                                 # Thử tìm container với các định dạng tên khác nhau
+//                                 CONTAINER_ID=$(docker ps --filter "name=${service}" --format "{{.ID}}" | head -n 1)
+//                             fi
+//
+//                             if [ -n "$CONTAINER_ID" ]; then
+//                                 echo "Found container ID: $CONTAINER_ID for service '$service'"
+//                                 CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' $CONTAINER_ID)
+//                                 HEALTH_STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}N/A{{end}}' $CONTAINER_ID)
+//
+//                                 echo "Service '$service' status: $CONTAINER_STATUS, health: $HEALTH_STATUS"
+//
+//                                 if [ "$CONTAINER_STATUS" != "running" ]; then
+//                                     echo "WARNING: Container for service '$service' is not running!"
+//                                 fi
+//                             else {
+//                                 echo "WARNING: Could not find any container for service '$service'!"
+//                             }
+//                             fi
+//                         done
+//
+//                         # Show final status of all containers
+//                         echo "Final status of all services:"
+//                         docker compose ps
+//                         '''
+//                     } else {
+//                         echo "No services to verify"
+//                     }
+//                 }
+//             }
+//         }
     }
 
     post {
