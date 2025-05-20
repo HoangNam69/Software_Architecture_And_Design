@@ -22,6 +22,18 @@ pipeline {
             }
         }
 
+        stage('Fix Maven Wrapper Permissions') {
+            steps {
+                script {
+                    // Set executable permissions on Maven wrapper scripts in all services
+                    sh '''
+                    find ./ -name "mvnw" -exec chmod +x {} \\;
+                    echo "Setting executable permissions on Maven wrapper scripts"
+                    '''
+                }
+            }
+        }
+
         stage('Update Ports Configuration') {
             steps {
                 script {
