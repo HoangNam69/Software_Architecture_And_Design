@@ -218,12 +218,12 @@ pipeline {
                         # Danh sách services cần kiểm tra
                         SERVICES_TO_CHECK="${CHANGED_SERVICES}"
 
-                        # Thiết lập timeout (180 giây)
-                        TIMEOUT=180
+                        # Thiết lập timeout (300 giây)
+                        TIMEOUT=300
                         START_TIME=$(date +%s)
 
-                        # Initial delay to give services time to start
-                        sleep 10
+                        # Initial delay 3min to give services time to start
+                        sleep 3m
 
                         # Check service health status
                         for service in $SERVICES_TO_CHECK; do
