@@ -146,6 +146,20 @@ services:
     networks:
       - microservices-network
 
+  report-service:
+    build: ./report-service
+    container_name: report-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8088
+    depends_on:
+      api-gateway:
+        condition: service_started
+    restart: always
+    networks:
+      - microservices-network
 networks:
   microservices-network:
     driver: bridge

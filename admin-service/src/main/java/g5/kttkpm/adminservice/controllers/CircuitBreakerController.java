@@ -30,6 +30,7 @@ public class CircuitBreakerController {
     private static final String SERVICE_ORDER = "Order Service";
     private static final String SERVICE_PAYMENT = "Payment Service";
     private static final String SERVICE_PRODUCT = "Product Service";
+    private static final String SERVICE_REPORT = "Report Service";
     
     private final AuthServiceClient authClient;
     private final CartServiceClient cartClient;
@@ -37,7 +38,8 @@ public class CircuitBreakerController {
     private final OrderServiceClient orderClient;
     private final PaymentServiceClient paymentClient;
     private final ProductServiceClient productClient;
-    
+    private final ReportServiceClient reportClient;
+
     /**
      * Get status of all services at once
      */
@@ -92,7 +94,15 @@ public class CircuitBreakerController {
             log.warn("Product service down.", e);
             responses.add(genResponse(SERVICE_PRODUCT, false));
         }
-        
+
+        // Report service
+        try {
+            responses.add(checkReportServiceStatus().getBody());
+        } catch (Exception e) {
+            log.warn("Report service down.", e);
+            responses.add(genResponse(SERVICE_REPORT, false));
+        }
+
         return ResponseEntity.ok(responses);
     }
     
@@ -108,6 +118,7 @@ public class CircuitBreakerController {
             case "order" -> checkOrderServiceStatus();
             case "payment" -> checkPaymentServiceStatus();
             case "product" -> checkProductServiceStatus();
+            case "report" -> checkReportServiceStatus();
             default -> ResponseEntity.badRequest().body(
                 new CircuitBreakerResponse(serviceName, "UNKNOWN", false)
             );
@@ -173,6 +184,16 @@ public class CircuitBreakerController {
         productClient.checkStatus();
         return ResponseEntity.ok(genResponse(SERVICE_PRODUCT, true));
     }
+
+    @GetMapping("/report")
+    @CircuitBreaker(
+            name = SERVICE_REPORT,
+            fallbackMethod = "fallbackStatusReportService"
+    )
+    public ResponseEntity<CircuitBreakerResponse> checkReportServiceStatus() {
+        reportClient.checkStatus();
+        return ResponseEntity.ok(genResponse(SERVICE_REPORT, true));
+    }
     
     public ResponseEntity<CircuitBreakerResponse> fallbackStatusAuthService(Exception e) {
         log.warn("Auth service down.", e);
@@ -213,6 +234,13 @@ public class CircuitBreakerController {
         log.warn("Product service down.", e);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
             genResponse(SERVICE_PRODUCT, false)
+        );
+    }
+
+    public ResponseEntity<CircuitBreakerResponse> fallbackStatusReportService(Exception e) {
+        log.warn("Product service down.", e);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+                genResponse(SERVICE_REPORT, false)
         );
     }
     

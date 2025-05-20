@@ -10,6 +10,7 @@ services:
   payment: http://localhost:8080/api/v1/payments
   order: http://localhost:8080/api/v1/orders
   cart: http://localhost:8080/api/v1
+  report: http://localhost:8080/api/v1/report
 
 # Resilience4j Circuit Breaker Configuration
 resilience4j:
@@ -69,6 +70,15 @@ resilience4j:
         waitDurationInOpenState: 5s
         failureRateThreshold: 50
         eventConsumerBufferSize: 10
+      report-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
   timelimiter:
     instances:
       auth-service:
@@ -82,4 +92,6 @@ resilience4j:
       payment-service:
         timeoutDuration: 3s
       product-service:
+        timeoutDuration: 3s
+      report-service:
         timeoutDuration: 3s

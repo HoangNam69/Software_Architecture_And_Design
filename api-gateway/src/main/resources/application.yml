@@ -19,3 +19,4 @@ logging:
     root: off
     org.springframework: info
     g5.kttkpm: info
+    web: debug

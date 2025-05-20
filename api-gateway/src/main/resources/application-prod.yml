@@ -54,6 +54,14 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: report-service
+          uri: http://report-service:8088
+          predicates:
+            - Path=/api/v1/report/**
+          filters:
+            - StripPrefix=0
+
+        # Cart service must be at last
         - id: cart-service
           uri: http://cart-service:8086
           predicates:
