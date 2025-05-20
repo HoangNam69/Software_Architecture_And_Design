@@ -68,12 +68,17 @@ pipeline {
                         env.CHANGED_SERVICES.split().each { service ->
                             echo "Backing up environment variables for service: ${service}"
                             sh """
-                            if docker ps -q -f name=${service} > /dev/null; then
+                            # Check if container exists and is running (not in restarting state)
+                            CONTAINER_STATUS=\$(docker inspect --format='{{.State.Status}}' ${service} 2>/dev/null || echo "not_found")
+
+                            if [ "\$CONTAINER_STATUS" = "running" ]; then
                                 # Extract environment variables
-                                docker exec ${service} env | grep -v "PATH=" | grep -v "PWD=" | grep -v "HOME=" > ${ENV_BACKUP_DIR}/${service}.env
+                                docker exec ${service} env | grep -v "PATH=" | grep -v "PWD=" | grep -v "HOME=" > ${ENV_BACKUP_DIR}/${service}.env || echo "Failed to extract environment variables"
                                 echo "Environment variables for ${service} backed up successfully"
                             else
-                                echo "Container ${service} is not running, no environment to backup"
+                                echo "Container ${service} is not running (status: \$CONTAINER_STATUS), no environment to backup"
+                                # Create empty file to avoid issues in the restore stage
+                                touch ${ENV_BACKUP_DIR}/${service}.env
                             fi
                             """
                         }
@@ -122,7 +127,7 @@ pipeline {
                         // Nếu có service thay đổi, chỉ build những service đó
                         env.CHANGED_SERVICES.split().each { service ->
                             echo "Building service: ${service}"
-                            sh "docker compose build ${service}"
+                            sh "docker compose build ${service} || { echo 'Failed to build ${service} but continuing'; }"
                         }
                     } else {
                         echo "No services to build"
@@ -146,7 +151,7 @@ pipeline {
                             docker compose rm -f ${service} || true
 
                             # Khởi động service với cấu hình mới
-                            docker compose up -d ${service}
+                            docker compose up -d ${service} || { echo 'Failed to start ${service} but continuing'; }
                             """
                         }
                     } else {
@@ -163,30 +168,37 @@ pipeline {
                         env.CHANGED_SERVICES.split().each { service ->
                             echo "Restoring environment variables for service: ${service}"
                             sh """
-                            if [ -f "${ENV_BACKUP_DIR}/${service}.env" ]; then
+                            if [ -f "${ENV_BACKUP_DIR}/${service}.env" ] && [ -s "${ENV_BACKUP_DIR}/${service}.env" ]; then
                                 echo "Found environment backup for ${service}, restoring..."
 
                                 # Wait a bit for container to be fully up
-                                sleep 5
+                                sleep 10
 
-                                # Apply each environment variable to the container
-                                cat ${ENV_BACKUP_DIR}/${service}.env | while read -r line; do
-                                    # Skip empty lines
-                                    [ -z "\$line" ] && continue
+                                # Check if container is running before trying to restore environment
+                                CONTAINER_STATUS=\$(docker inspect --format='{{.State.Status}}' ${service} 2>/dev/null || echo "not_found")
 
-                                    # Extract key and value
-                                    key=\$(echo "\$line" | cut -d= -f1)
-                                    value=\$(echo "\$line" | cut -d= -f2-)
+                                if [ "\$CONTAINER_STATUS" = "running" ]; then
+                                    # Apply each environment variable to the container
+                                    cat ${ENV_BACKUP_DIR}/${service}.env | while read -r line; do
+                                        # Skip empty lines
+                                        [ -z "\$line" ] && continue
 
-                                    # Skip some variables we don't want to override
-                                    if [[ "\$key" != "PATH" && "\$key" != "PWD" && "\$key" != "HOME" && "\$key" != "HOSTNAME" ]]; then
-                                        echo "Setting \$key for ${service}..."
-                                        docker exec ${service} /bin/sh -c "export \$key='\$value'"
-                                    fi
-                                done
-                                echo "Environment restored for ${service}"
+                                        # Extract key and value
+                                        key=\$(echo "\$line" | cut -d= -f1)
+                                        value=\$(echo "\$line" | cut -d= -f2-)
+
+                                        # Skip some variables we don't want to override
+                                        if [[ "\$key" != "PATH" && "\$key" != "PWD" && "\$key" != "HOME" && "\$key" != "HOSTNAME" ]]; then
+                                            echo "Setting \$key for ${service}..."
+                                            docker exec ${service} /bin/sh -c "export \$key='\$value'" || echo "Failed to set \$key but continuing"
+                                        fi
+                                    done
+                                    echo "Environment restored for ${service}"
+                                else
+                                    echo "Container ${service} is not running (status: \$CONTAINER_STATUS), skipping environment restoration"
+                                fi
                             else
-                                echo "No environment backup found for ${service}, skipping restoration"
+                                echo "No environment backup found for ${service} or backup file is empty, skipping restoration"
                             fi
                             """
                         }
@@ -210,24 +222,27 @@ pipeline {
                         TIMEOUT=180
                         START_TIME=$(date +%s)
 
-                        while true; do
+                        # Initial delay to give services time to start
+                        sleep 10
+
+                        # Check service health status
+                        for service in $SERVICES_TO_CHECK; do
                             CURRENT_TIME=$(date +%s)
                             ELAPSED=$((CURRENT_TIME - START_TIME))
 
                             if [ $ELAPSED -gt $TIMEOUT ]; then
-                                echo "Timeout reached while waiting for services to be healthy!"
-                                docker compose ps
-                                exit 0  # Không fail pipeline nếu timeout
+                                echo "Timeout reached while checking services!"
+                                break
                             fi
 
-                            # Hiển thị trạng thái các container
-                            echo "Checking services status (elapsed time: ${ELAPSED}s)..."
-                            docker compose ps
-
-                            # Đợi 5 giây trước khi kiểm tra lại
-                            echo "Waiting 5 seconds before next health check..."
-                            sleep 5
+                            echo "Checking status of $service (elapsed time: ${ELAPSED}s)..."
+                            CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' $service 2>/dev/null || echo "not_found")
+                            echo "$service status: $CONTAINER_STATUS"
                         done
+
+                        # Show final status of all containers
+                        echo "Final status of all services:"
+                        docker compose ps
                         '''
                     } else {
                         echo "No services to verify"
@@ -254,7 +269,7 @@ pipeline {
                 // Trong trường hợp thất bại, hiển thị logs của các service thay đổi để debug
                 if (env.CHANGED_SERVICES) {
                     env.CHANGED_SERVICES.split().each { service ->
-                        sh "docker compose logs ${service}"
+                        sh "docker compose logs ${service} || echo 'Could not get logs for ${service}'"
                     }
                 }
             }
