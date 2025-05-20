@@ -11,6 +11,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=https://auth.punshub.top/realms/tmdt
       - SERVER_PORT=8080
+    env_file:
+      - /var/env-config/api-gateway.env
     restart: always
     networks:
       - microservices-network
@@ -26,6 +28,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/admin-service.env
     restart: always
     networks:
       - microservices-network
@@ -42,6 +46,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/authentication-service.env
     restart: always
     networks:
       - microservices-network
@@ -59,6 +65,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/cart-service.env
     restart: always
     networks:
       - microservices-network
@@ -77,6 +85,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/category-service.env
     restart: always
     networks:
       - microservices-network
@@ -101,6 +111,8 @@ services:
         condition: service_started
       payment-service:
         condition: service_started
+    env_file:
+      - /var/env-config/order-service.env
     restart: always
     networks:
       - microservices-network
@@ -129,6 +141,8 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/payment-service.env
     restart: always
     networks:
       - microservices-network
@@ -160,6 +174,8 @@ services:
         condition: service_started
       category-service:
         condition: service_started
+    env_file:
+      - /var/env-config/product-service.env
     restart: always
     networks:
       - microservices-network
@@ -175,9 +191,17 @@ services:
     depends_on:
       api-gateway:
         condition: service_started
+    env_file:
+      - /var/env-config/report-service.env
     restart: always
     networks:
       - microservices-network
+
+
+volumes:
+  env-config:
+    external: true
+
 networks:
   microservices-network:
     driver: bridge
