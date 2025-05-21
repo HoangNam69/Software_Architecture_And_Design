@@ -6,6 +6,7 @@ import g5.kttkpm.orderservice.entity.Order;
 import g5.kttkpm.orderservice.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,12 @@ public class OrderController {
     
     private final OrderService orderService;
     private final PaymentClient paymentClient;
+    
+    @Value("${services.callback.success}")
+    private String paymentCallbackSuccessUrl;
+    
+    @Value("${services.callback.cancel}")
+    private String paymentCallbackCancelUrl;
     
     @PostMapping
     @CircuitBreaker(name = "productService", fallbackMethod = "fallbackCreateOrder")
@@ -101,8 +108,8 @@ public class OrderController {
                 .collect(Collectors.toList()));
             
             // Cấu hình URL callback
-            paymentRequest.setReturnUrl("http://localhost:5173/orders/payment/success?orderId=" + order.getId());
-            paymentRequest.setCancelUrl("http://localhost:5173/orders/payment/cancel?orderId=" + order.getId());
+            paymentRequest.setReturnUrl(paymentCallbackSuccessUrl + order.getId());
+            paymentRequest.setCancelUrl(paymentCallbackCancelUrl + order.getId());
             
             // Thông tin người mua (nếu có)
             paymentRequest.setBuyerName(order.getCustomerName());
