@@ -4,9 +4,9 @@ pipeline {
     environment {
         // Định nghĩa các service cần theo dõi thay đổi
         SERVICES = "api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service"
-        // Thêm đường dẫn cho backup env và temporary env files
-        ENV_BACKUP_DIR = "/var/env-backup"
-        ENV_CONFIG_DIR = "/var/env-backup/config"  // Changed from /var/jenkins_home/env-config
+        // Thay đổi đường dẫn sang thư mục có quyền ghi
+        ENV_BACKUP_DIR = "/tmp/env-backup"
+        ENV_CONFIG_DIR = "/tmp/env-backup/config"
         // Thêm flag để theo dõi lần build đầu tiên
         IS_FIRST_BUILD = "false"
     }
