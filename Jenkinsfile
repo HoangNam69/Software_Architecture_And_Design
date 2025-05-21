@@ -6,7 +6,7 @@ pipeline {
         SERVICES = "api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service"
         // Thêm đường dẫn cho backup env và temporary env files
         ENV_BACKUP_DIR = "/var/env-backup"
-        ENV_CONFIG_DIR = "/var/env-config"  // Changed from /var/jenkins_home/env-config
+        ENV_CONFIG_DIR = "/var/env-backup/config"  // Changed from /var/jenkins_home/env-config
         // Thêm flag để theo dõi lần build đầu tiên
         IS_FIRST_BUILD = "false"
     }
