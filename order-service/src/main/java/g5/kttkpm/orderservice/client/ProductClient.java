@@ -42,4 +42,33 @@ public class ProductClient {
             throw e;
         }
     }
+    
+    public ProductDTO updateProductInventory(String productId, Integer newQuantity, String changeReason) {
+        log.info("Updating inventory for product ID: {}, new quantity: {}, reason: {}",
+            productId, newQuantity, changeReason);
+        
+        try {
+            String url = String.format("%s/%s/inventory?newQuantity=%d&reason=%s&changedBy=%s",
+                productServiceUrl,
+                productId,
+                newQuantity,
+                changeReason,
+                "order-service");
+            
+            ResponseEntity<BaseDTO<ProductDTO>> response = restTemplate.exchange(
+                url,
+                HttpMethod.PUT,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+            );
+            
+            BaseDTO<ProductDTO> productResponse = response.getBody();
+            log.debug("Product inventory update response: {}", productResponse);
+            return productResponse.data();
+        } catch (Exception e) {
+            log.error("Error updating inventory for product ID {}: {}", productId, e.getMessage());
+            throw e;
+        }
+    }
 }

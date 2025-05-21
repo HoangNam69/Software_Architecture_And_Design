@@ -2,6 +2,7 @@ package g5.kttkpm.productservice.controller;
 
 import g5.kttkpm.productservice.dto.CategoryDTO;
 import g5.kttkpm.productservice.dto.ListResponse;
+import g5.kttkpm.productservice.dto.ProductUpdateRequest;
 import g5.kttkpm.productservice.model.Product;
 import g5.kttkpm.productservice.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -278,5 +279,14 @@ public class ProductController {
             products.getTotalPages(),
             products.isFirst(),
             products.isLast());
+    }
+    
+    @PutMapping("/{id}/unified")
+    public ResponseEntity<Product> updateProductUnified(
+        @PathVariable String id,
+        @RequestBody ProductUpdateRequest updateRequest) {
+        
+        Product updatedProduct = productService.updateProductUnified(id, updateRequest);
+        return ResponseEntity.ok(updatedProduct);
     }
 }

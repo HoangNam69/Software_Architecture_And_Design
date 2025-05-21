@@ -1,6 +1,7 @@
 package g5.kttkpm.productservice.service;
 
 import g5.kttkpm.productservice.dto.CategoryDTO;
+import g5.kttkpm.productservice.dto.ProductUpdateRequest;
 import g5.kttkpm.productservice.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,12 @@ public interface ProductService {
     Product updateProductInventory(String id, Integer newQuantity, Product.QuantityChangeReason reason, String changedBy);
     List<Product.QuantityHistory> getQuantityHistory(String id);
     
+    // New specialized inventory methods for order operations
+    Product reserveProductQuantity(String id, Integer quantity, String orderId);
+    Product cancelReservation(String id, Integer quantity, String orderId);
+    Product completeOrder(String id, Integer quantity, String orderId);
+    Product returnItems(String id, Integer quantity, String orderId);
+    
     // Category Management
     Product setMainCategory(String productId, String categoryId);
     Product addCategory(String productId, String categoryId);
@@ -54,4 +61,6 @@ public interface ProductService {
     Product updateProductAttributes(String id, Map<String, Object> attributes);
     Product removeProductAttribute(String id, String key);
     Page<Product> getAllProductsByCategoryId(String categoryId, Pageable pageable);
+    
+    Product updateProductUnified(String id, ProductUpdateRequest updateRequest);
 }

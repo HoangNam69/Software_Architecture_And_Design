@@ -1,6 +1,7 @@
 package g5.kttkpm.productservice.service.impl;
 
 import g5.kttkpm.productservice.dto.CategoryDTO;
+import g5.kttkpm.productservice.dto.ProductUpdateRequest;
 import g5.kttkpm.productservice.model.Product;
 import g5.kttkpm.productservice.model.ProductImage;
 import g5.kttkpm.productservice.repo.ProductImageRepository;
@@ -430,10 +431,23 @@ public class ProductServiceImpl implements ProductService {
         // Calculate the difference to update available quantity
         int difference = newQuantity - product.getTotalQuantity();
         
-        // Update total quantity
+        // Update total quantity and maintain history
         product.updateQuantity(newQuantity, reason, changedBy);
         
-        // Update available quantity
+        // Handle different scenarios based on reason
+        if (reason == Product.QuantityChangeReason.ORDER_PLACEMENT) {
+            // For order placement: increase reserved quantity, decrease available quantity
+            int orderQuantity = -difference; // Convert the negative difference to positive order quantity
+            product.setReservedQuantity(product.getReservedQuantity() + orderQuantity);
+            // Available quantity is already reduced by the difference calculation below
+        } else if (reason == Product.QuantityChangeReason.ORDER_CANCELLATION) {
+            // For order cancellation: decrease reserved quantity, increase available quantity
+            int cancelQuantity = difference; // The positive difference is the cancel quantity
+            product.setReservedQuantity(Math.max(0, product.getReservedQuantity() - cancelQuantity));
+            // Available quantity is already increased by the difference calculation below
+        }
+        
+        // Update available quantity based on the calculated difference
         int newAvailable = product.getAvailableQuantity() + difference;
         product.setAvailableQuantity(Math.max(0, newAvailable));
         
@@ -444,6 +458,119 @@ public class ProductServiceImpl implements ProductService {
             product.setStatus(Product.ProductStatus.ACTIVE);
         }
         
+        return productRepository.save(product);
+    }
+    
+    // New specialized methods for order operations
+    
+    @Override
+    public Product reserveProductQuantity(String id, Integer quantity, String orderId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity to reserve must be positive");
+        }
+        
+        Product product = getProductById(id);
+        
+        // Check if there's enough available quantity
+        if (product.getAvailableQuantity() < quantity) {
+            throw new RuntimeException("Not enough available quantity. Available: " +
+                product.getAvailableQuantity() + ", Requested: " + quantity);
+        }
+        
+        // Decrease available quantity
+        product.setAvailableQuantity(product.getAvailableQuantity() - quantity);
+        
+        // Increase reserved quantity
+        product.setReservedQuantity(product.getReservedQuantity() + quantity);
+        
+        // Update total quantity history for tracking
+        int newTotalQuantity = product.getTotalQuantity(); // Total remains the same
+        product.updateQuantity(newTotalQuantity, Product.QuantityChangeReason.ORDER_PLACEMENT, "order-" + orderId);
+        
+        // Update status if needed
+        if (product.getAvailableQuantity() <= 0) {
+            product.setStatus(Product.ProductStatus.OUT_OF_STOCK);
+        }
+        
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+    
+    @Override
+    public Product cancelReservation(String id, Integer quantity, String orderId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity to cancel must be positive");
+        }
+        
+        Product product = getProductById(id);
+        
+        // Ensure we don't decrease reserved quantity below zero
+        int quantityToCancel = Math.min(quantity, product.getReservedQuantity());
+        
+        // Decrease reserved quantity
+        product.setReservedQuantity(product.getReservedQuantity() - quantityToCancel);
+        
+        // Increase available quantity
+        product.setAvailableQuantity(product.getAvailableQuantity() + quantityToCancel);
+        
+        // Update total quantity history for tracking
+        int newTotalQuantity = product.getTotalQuantity(); // Total remains the same
+        product.updateQuantity(newTotalQuantity, Product.QuantityChangeReason.ORDER_CANCELLATION, "cancel-" + orderId);
+        
+        // Update status if needed
+        if (product.getStatus() == Product.ProductStatus.OUT_OF_STOCK && product.getAvailableQuantity() > 0) {
+            product.setStatus(Product.ProductStatus.ACTIVE);
+        }
+        
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+    
+    @Override
+    public Product completeOrder(String id, Integer quantity, String orderId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity to complete must be positive");
+        }
+        
+        Product product = getProductById(id);
+        
+        // Ensure we don't decrease reserved quantity below zero
+        int quantityToComplete = Math.min(quantity, product.getReservedQuantity());
+        
+        // Decrease reserved quantity (items are now sold)
+        product.setReservedQuantity(product.getReservedQuantity() - quantityToComplete);
+        
+        // Decrease total quantity (items have left inventory)
+        int newTotalQuantity = product.getTotalQuantity() - quantityToComplete;
+        product.updateQuantity(newTotalQuantity, Product.QuantityChangeReason.ORDER_FULFILLED, "complete-" + orderId);
+        
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+    
+    @Override
+    public Product returnItems(String id, Integer quantity, String orderId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity to return must be positive");
+        }
+        
+        Product product = getProductById(id);
+        
+        // Increase total quantity
+        int newTotalQuantity = product.getTotalQuantity() + quantity;
+        
+        // Increase available quantity
+        product.setAvailableQuantity(product.getAvailableQuantity() + quantity);
+        
+        // Update total quantity history
+        product.updateQuantity(newTotalQuantity, Product.QuantityChangeReason.RETURN, "return-" + orderId);
+        
+        // Update status if needed
+        if (product.getStatus() == Product.ProductStatus.OUT_OF_STOCK && product.getAvailableQuantity() > 0) {
+            product.setStatus(Product.ProductStatus.ACTIVE);
+        }
+        
+        product.setUpdatedAt(LocalDateTime.now());
         return productRepository.save(product);
     }
     
@@ -655,5 +782,167 @@ public class ProductServiceImpl implements ProductService {
             .ifPresent(productImage ->
                 product.setImageUrls(productImage.getImageUrl())
             );
+    }
+    
+    @Override
+    public Product updateProductUnified(String id, ProductUpdateRequest updateRequest) {
+        Product product = getProductById(id);
+        
+        // Xử lý loại cập nhật dựa trên operation
+        ProductUpdateRequest.UpdateOperationType operation = updateRequest.getOperation();
+        if (operation == null) {
+            operation = ProductUpdateRequest.UpdateOperationType.ALL; // Mặc định cập nhật tất cả
+        }
+        
+        // Xử lý từng loại cập nhật
+        switch (operation) {
+            case ALL:
+                updateBasicInfo(product, updateRequest);
+                updatePrice(product, updateRequest);
+                updateQuantity(product, updateRequest);
+                updateStatus(product, updateRequest);
+                updateCategories(product, updateRequest);
+                updateAttributes(product, updateRequest);
+                break;
+            case BASIC_INFO:
+                updateBasicInfo(product, updateRequest);
+                break;
+            case PRICE:
+                updatePrice(product, updateRequest);
+                break;
+            case QUANTITY:
+                updateQuantity(product, updateRequest);
+                break;
+            case STATUS:
+                updateStatus(product, updateRequest);
+                break;
+            case CATEGORIES:
+                updateCategories(product, updateRequest);
+                break;
+            case ATTRIBUTES:
+                updateAttributes(product, updateRequest);
+                break;
+        }
+        
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+    
+    // Các phương thức hỗ trợ xử lý từng phần
+    private void updateBasicInfo(Product product, ProductUpdateRequest request) {
+        if (request.getName() != null) product.setName(request.getName());
+        if (request.getSku() != null) product.setSku(request.getSku());
+        if (request.getDescription() != null) product.setDescription(request.getDescription());
+        if (request.getBrand() != null) product.setBrand(request.getBrand());
+        if (request.getThumbnailUrl() != null) product.setThumbnailUrl(request.getThumbnailUrl());
+        
+        // Cập nhật hình ảnh nếu được cung cấp
+        if (request.getImageUrls() != null) {
+            product.setImageUrls(request.getImageUrls());
+            
+            // Cập nhật hoặc tạo mới bản ghi hình ảnh sản phẩm
+            Optional<ProductImage> existingImages = productImageRepository.findByProductId(product.getProductId());
+            if (existingImages.isPresent()) {
+                ProductImage productImage = existingImages.get();
+                productImage.setImageUrl(request.getImageUrls());
+                productImageRepository.save(productImage);
+            } else if (!request.getImageUrls().isEmpty()) {
+                ProductImage productImage = ProductImage.builder()
+                    .productId(product.getProductId())
+                    .imageUrl(request.getImageUrls())
+                    .build();
+                productImageRepository.save(productImage);
+            }
+        }
+    }
+    
+    private void updatePrice(Product product, ProductUpdateRequest request) {
+        if (request.getCurrentPrice() != null) {
+            // Sử dụng phương thức hiện có cho theo dõi lịch sử
+            Product.PriceChangeReason reason = request.getPriceChangeReason() != null ?
+                request.getPriceChangeReason() : Product.PriceChangeReason.MANUAL_UPDATE;
+            
+            String changedBy = request.getPriceChangedBy() != null ?
+                request.getPriceChangedBy() : "system";
+            
+            product.updatePrice(request.getCurrentPrice(), reason, changedBy);
+        }
+    }
+    
+    private void updateQuantity(Product product, ProductUpdateRequest request) {
+        if (request.getTotalQuantity() != null) {
+            // Sử dụng phương thức hiện có cho theo dõi lịch sử
+            Product.QuantityChangeReason reason = request.getQuantityChangeReason() != null ?
+                request.getQuantityChangeReason() : Product.QuantityChangeReason.MANUAL_ADJUSTMENT;
+            
+            String changedBy = request.getQuantityChangedBy() != null ?
+                request.getQuantityChangedBy() : "system";
+            
+            // Tính toán sự khác biệt để cập nhật số lượng có sẵn
+            int difference = request.getTotalQuantity() - product.getTotalQuantity();
+            
+            // Cập nhật tổng số lượng
+            product.updateQuantity(request.getTotalQuantity(), reason, changedBy);
+            
+            // Cập nhật số lượng có sẵn
+            int newAvailable = product.getAvailableQuantity() + difference;
+            product.setAvailableQuantity(Math.max(0, newAvailable));
+            
+            // Tự động cập nhật trạng thái nếu sản phẩm hết hàng
+            if (product.getAvailableQuantity() <= 0) {
+                product.setStatus(Product.ProductStatus.OUT_OF_STOCK);
+            } else if (product.getStatus() == Product.ProductStatus.OUT_OF_STOCK) {
+                product.setStatus(Product.ProductStatus.ACTIVE);
+            }
+        }
+    }
+    
+    private void updateStatus(Product product, ProductUpdateRequest request) {
+        if (request.getStatus() != null) {
+            product.setStatus(request.getStatus());
+        }
+    }
+    
+    private void updateCategories(Product product, ProductUpdateRequest request) {
+        // Cập nhật danh mục chính nếu được cung cấp
+        if (request.getMainCategoryId() != null) {
+            // Kiểm tra danh mục tồn tại
+            CategoryDTO category = categoryClient.getCategoryById(request.getMainCategoryId());
+            if (category == null) {
+                throw new RuntimeException("Category not found with id: " + request.getMainCategoryId());
+            }
+            product.setMainCategory(request.getMainCategoryId());
+        }
+        
+        // Cập nhật danh mục bổ sung nếu được cung cấp
+        if (request.getAdditionalCategories() != null) {
+            // Xóa tất cả danh mục hiện có trước
+            if (product.getAdditionalCategories() == null) {
+                product.setAdditionalCategories(new ArrayList<>());
+            } else {
+                product.getAdditionalCategories().clear();
+            }
+            
+            // Thêm các danh mục mới và kiểm tra tính hợp lệ
+            for (String categoryId : request.getAdditionalCategories()) {
+                CategoryDTO category = categoryClient.getCategoryById(categoryId);
+                if (category == null) {
+                    throw new RuntimeException("Category not found with id: " + categoryId);
+                }
+                product.addCategory(categoryId);
+            }
+        }
+    }
+    
+    private void updateAttributes(Product product, ProductUpdateRequest request) {
+        if (request.getAdditionalAttributes() != null) {
+            // Khởi tạo nếu null
+            if (product.getAdditionalAttributes() == null) {
+                product.setAdditionalAttributes(new HashMap<>());
+            }
+            
+            // Cập nhật hoặc thêm thuộc tính
+            product.getAdditionalAttributes().putAll(request.getAdditionalAttributes());
+        }
     }
 }

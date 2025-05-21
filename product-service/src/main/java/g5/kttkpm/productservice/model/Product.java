@@ -107,7 +107,7 @@ public class Product {
         RESTOCK,
         RETURN,
         MANUAL_ADJUSTMENT,
-        DAMAGED_STOCK
+        ORDER_PLACEMENT, ORDER_CANCELLATION, ORDER_FULFILLED, DAMAGED_STOCK
     }
     
     // Utility methods - updated to match new fields
