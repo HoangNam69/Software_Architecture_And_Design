@@ -40,8 +40,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
       interval: 30s
@@ -68,8 +67,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
@@ -97,8 +95,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
       interval: 30s
@@ -127,8 +124,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 30s
@@ -159,12 +155,9 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
-      product-service:
-        condition: service_healthy
-      payment-service:
-        condition: service_healthy
+      - api-gateway
+      - product-service
+      - payment-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
       interval: 30s
@@ -203,8 +196,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
       interval: 30s
@@ -244,10 +236,8 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
-      category-service:
-        condition: service_healthy
+      - api-gateway
+      - category-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
@@ -273,8 +263,7 @@ services:
     volumes:
       - env-config:/var/env-config
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
       interval: 30s

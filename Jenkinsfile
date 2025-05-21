@@ -269,61 +269,52 @@ pipeline {
             steps {
                 script {
                     if (env.CHANGED_SERVICES) {
-                        // If first build, stop all existing containers first
-                        if (env.IS_FIRST_BUILD == "true") {
-                            echo "First time deployment. Stopping all existing services before redeploying..."
-                            sh "docker compose down || true"
+                        // Stop and remove ALL containers first to avoid conflicts
+                        echo "Stopping and removing all existing services before redeploying..."
+                        sh """
+                        # Stop all existing containers first
+                        docker stop api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service || true
 
-                            // Verify the network is properly created after docker-compose down
-                            echo "Ensuring microservices-network exists..."
-                            sh """
-                            # Remove existing network if it exists
-                            docker network rm microservices-network || true
-                            # Create a fresh network
-                            docker network create microservices-network || true
-                            """
-                        } else {
-                            // For non-first build, stop all containers first to avoid dependency conflicts
-                            echo "Stopping all services before redeploying..."
-                            sh "docker compose down || true"
+                        # Remove all existing containers
+                        docker rm -f api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service || true
 
-                            // Ensure network exists
-                            sh """
-                            docker network create microservices-network || true
-                            """
-                        }
+                        # Stop docker compose if needed
+                        docker compose down || true
 
-                        // Try to start all services with the api-gateway first
+                        # Ensure network exists and is fresh
+                        docker network rm microservices-network || true
+                        docker network create microservices-network || true
+                        """
+
+                        // Start with the api-gateway first
                         echo "Starting api-gateway first..."
                         sh """
                         docker compose up -d api-gateway || echo 'Failed to start api-gateway but continuing'
-                        # Wait a bit for the gateway to be ready
+                        # Wait for the gateway to be ready
                         sleep 30
                         """
 
-                        // Start other changed services (except api-gateway which was already started)
+                        // Start other services one by one
                         env.CHANGED_SERVICES.split().each { service ->
                             if (service != "api-gateway") {
                                 echo "Starting service: ${service}"
                                 sh """
                                 docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'
                                 # Brief pause between service starts
-                                sleep 5
+                                sleep 10
                                 """
                             }
                         }
 
-                        // If first build, check if all services have been started
-                        if (env.IS_FIRST_BUILD == "true") {
-                            echo "Checking if all services have been started successfully..."
-                            def servicesList = SERVICES.split()
-                            servicesList.each { service ->
-                                def isRunning = sh(script: "docker ps | grep ${service} || echo 'NOT_RUNNING'", returnStdout: true).trim()
-                                if (isRunning == 'NOT_RUNNING' || !isRunning.contains(service)) {
-                                    echo "Service ${service} is not running, attempting to start it..."
-                                    sh "docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'"
-                                    sh "sleep 5"
-                                }
+                        // Check if all services are running
+                        echo "Checking if all services have been started successfully..."
+                        def servicesList = SERVICES.split()
+                        servicesList.each { service ->
+                            def isRunning = sh(script: "docker ps | grep ${service} || echo 'NOT_RUNNING'", returnStdout: true).trim()
+                            if (isRunning == 'NOT_RUNNING' || !isRunning.contains(service)) {
+                                echo "Service ${service} is not running, attempting to start it again..."
+                                sh "docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'"
+                                sh "sleep 10"
                             }
                         }
                     } else {
