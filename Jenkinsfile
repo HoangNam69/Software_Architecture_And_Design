@@ -282,30 +282,30 @@ pipeline {
                             # Create a fresh network
                             docker network create microservices-network || true
                             """
+                        } else {
+                            // For non-first build, stop all containers first to avoid dependency conflicts
+                            echo "Stopping all services before redeploying..."
+                            sh "docker compose down || true"
+
+                            // Ensure network exists
+                            sh """
+                            docker network create microservices-network || true
+                            """
                         }
 
                         // Try to start all services with the api-gateway first
                         echo "Starting api-gateway first..."
                         sh """
-                        docker compose stop api-gateway || true
-                        docker compose rm -f api-gateway || true
                         docker compose up -d api-gateway || echo 'Failed to start api-gateway but continuing'
                         # Wait a bit for the gateway to be ready
                         sleep 30
                         """
 
-                        // Restart changed services (except api-gateway which was already started)
+                        // Start other changed services (except api-gateway which was already started)
                         env.CHANGED_SERVICES.split().each { service ->
                             if (service != "api-gateway") {
-                                echo "Restarting service: ${service}"
+                                echo "Starting service: ${service}"
                                 sh """
-                                # Stop current service (if running)
-                                docker compose stop ${service} || true
-
-                                # Remove old container to avoid conflicts
-                                docker compose rm -f ${service} || true
-
-                                # Start service with new configuration
                                 docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'
                                 # Brief pause between service starts
                                 sleep 5
