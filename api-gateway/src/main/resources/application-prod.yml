@@ -74,3 +74,13 @@ app:
     allowed-origin-patterns: http://host.docker.internal:*,http://admin-service:*,http://localhost:*
   auth:
     token-validation-url: http://authentication-service:8081/api/v1/auth/token/validate
+  # Service URLs for production environment
+  services:
+    admin-service: http://admin-service:8087
+    authentication-service: http://authentication-service:8081
+    cart-service: http://cart-service:8086
+    category-service: http://category-service:8082
+    order-service: http://order-service:8085
+    payment-service: http://payment-service:8084
+    product-service: http://product-service:8083
+    report-service: http://report-service:8088

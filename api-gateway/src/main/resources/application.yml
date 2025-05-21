@@ -14,6 +14,42 @@ spring:
 server:
   port: 8080
 
+# Cấu hình cho Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      access: read_only
+    info:
+      access: read_only
+
+# Common service configuration
+app:
+  gateway:
+    description: API Gateway for Microservices Architecture
+    version: 1.0
+  health:
+    timeout-seconds: 3
+    endpoint-path: /actuator/health
+  services:
+    description:
+      admin-service: Service for administration tasks
+      authentication-service: Service for user authentication and authorization
+      cart-service: Service for managing shopping cart
+      category-service: Service for managing product categories
+      order-service: Service for managing orders
+      payment-service: Service for processing payments
+      product-service: Service for managing products
+      report-service: Service for generating reports
+
 logging:
   level:
     root: off
