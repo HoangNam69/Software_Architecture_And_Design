@@ -4,8 +4,9 @@ pipeline {
     environment {
         // Định nghĩa các service cần theo dõi thay đổi
         SERVICES = "api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service"
-        // Thêm đường dẫn cho backup env
+        // Thêm đường dẫn cho backup env và temporary env files
         ENV_BACKUP_DIR = "/var/env-backup"
+        ENV_CONFIG_DIR = "/var/env-config"  // Changed from /var/jenkins_home/env-config
         // Thêm flag để theo dõi lần build đầu tiên
         IS_FIRST_BUILD = "false"
     }
@@ -20,8 +21,9 @@ pipeline {
         stage('Environment Setup') {
             steps {
                 script {
-                    // Đảm bảo thư mục backup env tồn tại
+                    // Đảm bảo thư mục backup env và env config tồn tại
                     sh "mkdir -p ${ENV_BACKUP_DIR}"
+                    sh "mkdir -p ${ENV_CONFIG_DIR}"
 
                     // Kiểm tra xem volume env-config đã tồn tại chưa
                     def volumeExists = sh(script: "docker volume ls | grep env-config || echo 'NOT_FOUND'", returnStdout: true).trim()
@@ -41,12 +43,21 @@ pipeline {
                     def servicesList = SERVICES.split()
                     servicesList.each { service ->
                         sh """
-                        if [ ! -f "/var/env-config/${service}.env" ]; then
+                        if [ ! -f "${ENV_CONFIG_DIR}/${service}.env" ]; then
                             echo "Creating empty env file for ${service}..."
-                            touch "/var/env-config/${service}.env"
+                            touch "${ENV_CONFIG_DIR}/${service}.env"
                         fi
                         """
                     }
+
+                    // Copy env files from config dir to Docker volume
+                    sh """
+                    docker run --rm -v env-config:/data -v ${ENV_CONFIG_DIR}:/source alpine sh -c '
+                        mkdir -p /data
+                        cp -f /source/*.env /data/ || true
+                        chmod 666 /data/*.env || true
+                    '
+                    """
                 }
             }
         }
