@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: api-gateway
     ports:
-      - "8080:8080"  # Cổng này sẽ được thay đổi thành 45678:8080 bởi Jenkinsfile
+      - "45678:8080"  # Port already modified as per Jenkinsfile logic
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=https://auth.punshub.top/realms/tmdt
@@ -293,5 +293,4 @@ volumes:
 
 networks:
   microservices-network:
-    name: microservices-network
-    driver: bridge
+    external: true

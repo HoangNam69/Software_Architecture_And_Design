@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Định nghĩa các service cần theo dõi thay đổi
+        // Define services to monitor for changes
         SERVICES = "api-gateway admin-service authentication-service cart-service category-service order-service payment-service product-service report-service"
-        // Thay đổi đường dẫn sang thư mục có quyền ghi
+        // Change path to a directory with write permissions
         ENV_BACKUP_DIR = "/tmp/env-backup"
         ENV_CONFIG_DIR = "/tmp/env-backup/config"
-        // Thêm flag để theo dõi lần build đầu tiên
+        // Flag to track first build
         IS_FIRST_BUILD = "false"
     }
 
@@ -21,25 +21,27 @@ pipeline {
         stage('Environment Setup') {
             steps {
                 script {
-                    // Đảm bảo thư mục backup env và env config tồn tại
+                    // Ensure backup and config directories exist
                     sh "mkdir -p ${ENV_BACKUP_DIR}"
                     sh "mkdir -p ${ENV_CONFIG_DIR}"
 
-                    // Kiểm tra xem volume env-config đã tồn tại chưa
+                    // Check if env-config volume exists
                     def volumeExists = sh(script: "docker volume ls | grep env-config || echo 'NOT_FOUND'", returnStdout: true).trim()
                     if (volumeExists == 'NOT_FOUND' || !volumeExists.contains("env-config")) {
                         echo "Creating env-config volume..."
                         sh "docker volume create env-config"
                     }
 
-                    // Kiểm tra xem network microservices-network đã tồn tại chưa
-                    def networkExists = sh(script: "docker network ls | grep microservices-network || echo 'NOT_FOUND'", returnStdout: true).trim()
-                    if (networkExists == 'NOT_FOUND' || !networkExists.contains("microservices-network")) {
-                        echo "Creating microservices-network..."
-                        sh "docker network create microservices-network || true"
-                    }
+                    // Ensure the microservices-network is properly created or recreated
+                    echo "Setting up microservices-network..."
+                    sh """
+                    # Remove existing network if it exists
+                    docker network rm microservices-network || true
+                    # Create a fresh network
+                    docker network create microservices-network || true
+                    """
 
-                    // Đảm bảo tệp env cho các service tồn tại
+                    // Ensure env files for services exist
                     def servicesList = SERVICES.split()
                     servicesList.each { service ->
                         sh """
@@ -65,19 +67,19 @@ pipeline {
         stage('Detect Changed and Missing Services') {
             steps {
                 script {
-                    // Khởi tạo biến để kiểm tra xem dự án có phải lần đầu khởi tạo không
+                    // Initialize first-time initialization flag
                     def isFirstTimeInit = false
 
-                    // Kiểm tra xem có bất kỳ service nào đã được tạo chưa
+                    // Check if any services have already been created
                     def existingServices = sh(script: "docker compose ps -a --format '{{.Name}}' || echo 'NO_SERVICES'", returnStdout: true).trim()
                     echo "Existing services: ${existingServices}"
 
-                    // Nếu không tìm thấy bất kỳ service nào, đây có thể là lần đầu khởi tạo
+                    // If no services found, this may be the first initialization
                     if (existingServices == 'NO_SERVICES' || existingServices.isEmpty()) {
                         echo "No services found. This appears to be the first time initialization."
                         isFirstTimeInit = true
                     } else {
-                        // Đếm số lượng service hiện có và so sánh với số lượng service trong định nghĩa
+                        // Count existing services and compare with defined services
                         def serviceCount = existingServices.split('\n').size()
                         def definedServicesList = SERVICES.split()
 
@@ -87,7 +89,7 @@ pipeline {
                         }
                     }
 
-                    // Nếu là lần đầu khởi tạo, build tất cả các service
+                    // If first initialization, build all services
                     if (isFirstTimeInit) {
                         echo "First time initialization detected. Will build all services."
                         env.CHANGED_SERVICES = SERVICES
@@ -95,9 +97,9 @@ pipeline {
                         return
                     }
 
-                    // Nếu không phải lần đầu khởi tạo, tiếp tục với logic phát hiện thay đổi như trước
+                    // If not first initialization, proceed with change detection logic
                     try {
-                        // Kiểm tra xem có commit trước đó không
+                        // Check if there's a previous commit
                         def hasAnyCommit = sh(script: 'git rev-parse --verify HEAD', returnStatus: true) == 0
 
                         if (!hasAnyCommit) {
@@ -107,13 +109,13 @@ pipeline {
                             return
                         }
 
-                        // Lấy commit gần nhất
+                        // Get latest commit
                         def lastCommit = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
 
-                        // Kiểm tra xem có commit trước đó không
+                        // Check if there's a previous commit
                         def hasPreviousCommit = sh(script: 'git rev-parse HEAD~1', returnStatus: true) == 0
 
-                        // Nếu không có commit trước đó, build tất cả
+                        // If no previous commit, build all
                         if (!hasPreviousCommit) {
                             echo "This is the first commit. Will build all services."
                             env.CHANGED_SERVICES = SERVICES
@@ -123,18 +125,18 @@ pipeline {
 
                         def previousCommit = sh(script: 'git rev-parse HEAD~1', returnStdout: true).trim()
 
-                        // Lấy danh sách các file đã thay đổi giữa 2 commit
+                        // Get list of changed files between commits
                         def changedFiles = sh(script: "git diff --name-only ${previousCommit} ${lastCommit}", returnStdout: true).trim()
                         echo "Changed files: ${changedFiles}"
 
-                        // Khởi tạo map để lưu trạng thái thay đổi của các service
+                        // Initialize map to track service changes
                         def changedServices = [:]
                         def anyServiceChanged = false
                         def servicesList = SERVICES.split()
 
-                        // Kiểm tra từng service xem có thay đổi không
+                        // Check each service for changes
                         servicesList.each { service ->
-                            // Kiểm tra xem thư mục của service có thay đổi không
+                            // Check if service directory has changes
                             def serviceChanged = changedFiles.contains("${service}/")
                             changedServices[service] = serviceChanged
 
@@ -144,7 +146,7 @@ pipeline {
                             }
                         }
 
-                        // Nếu không có service nào thay đổi cụ thể nhưng có thay đổi chung (như docker-compose.yml)
+                        // If no specific service changed but common files changed (like docker-compose.yml)
                         if (!anyServiceChanged && (changedFiles.contains("docker-compose.yml") || changedFiles.contains("Jenkinsfile"))) {
                             echo "Common configuration files changed, will update all services"
                             servicesList.each { service ->
@@ -152,7 +154,7 @@ pipeline {
                             }
                         }
 
-                        // Kiểm tra các service nào chưa được build (không tồn tại container)
+                        // Check for services that don't exist or aren't running
                         servicesList.each { service ->
                             def containerExists = sh(script: "docker ps -a | grep ${service} || echo 'NOT_FOUND'", returnStdout: true).trim()
 
@@ -160,7 +162,7 @@ pipeline {
                                 echo "Service ${service} does not exist, will build it"
                                 changedServices[service] = true
                             } else {
-                                // Kiểm tra xem container có đang chạy không
+                                // Check if container is running
                                 def containerRunning = sh(script: "docker ps | grep ${service} || echo 'NOT_RUNNING'", returnStdout: true).trim()
                                 if (containerRunning == 'NOT_RUNNING' || !containerRunning.contains(service)) {
                                     echo "Service ${service} exists but is not running, will build it"
@@ -169,11 +171,11 @@ pipeline {
                             }
                         }
 
-                        // Lưu trạng thái thay đổi vào biến môi trường để sử dụng ở các stage sau
+                        // Save change status to environment variable for later stages
                         env.CHANGED_SERVICES = changedServices.findAll { it.value == true }.keySet().join(" ")
                         echo "Services to build: ${env.CHANGED_SERVICES}"
 
-                        // Nếu không có service nào cần build, gán lại là tất cả để đảm bảo các service thiếu sẽ được xây dựng
+                        // If no services need building, set to all to ensure missing services are built
                         if (!env.CHANGED_SERVICES) {
                             echo "No services to build based on changes. Will build all services."
                             env.CHANGED_SERVICES = SERVICES
@@ -220,7 +222,7 @@ pipeline {
         stage('Fix Maven Wrapper Permissions') {
             steps {
                 script {
-                    // Set executable permissions nhưng chỉ trong các thư mục service đã thay đổi
+                    // Set executable permissions for changed services
                     if (env.CHANGED_SERVICES) {
                         env.CHANGED_SERVICES.split().each { service ->
                             sh """
@@ -235,26 +237,14 @@ pipeline {
             }
         }
 
-        stage('Update Ports Configuration') {
-            steps {
-                script {
-                    // Cập nhật port trong docker-compose.yml - sử dụng port 45678
-                    sh '''
-                    sed -i 's/- "8080:8080"/- "45678:8080"/g' docker-compose.yml
-                    cat docker-compose.yml | grep -A 1 api-gateway
-                    '''
-                }
-            }
-        }
-
         stage('Docker Build Changed Services') {
             steps {
                 script {
-                    // Hiển thị Docker path
+                    // Display Docker path
                     sh 'which docker'
 
                     if (env.CHANGED_SERVICES) {
-                        // Kiểm tra xem có phải build đầu tiên không
+                        // Check if it's the first build
                         if (env.IS_FIRST_BUILD == "true") {
                             echo "First time build detected. Building with --no-cache to ensure fresh builds."
                             env.CHANGED_SERVICES.split().each { service ->
@@ -262,7 +252,7 @@ pipeline {
                                 sh "docker compose build --no-cache ${service} || { echo 'Failed to build ${service} but continuing'; }"
                             }
                         } else {
-                            // Nếu không phải build đầu tiên, build bình thường
+                            // If not first build, build normally
                             env.CHANGED_SERVICES.split().each { service ->
                                 echo "Building service: ${service}"
                                 sh "docker compose build ${service} || { echo 'Failed to build ${service} but continuing'; }"
@@ -279,28 +269,51 @@ pipeline {
             steps {
                 script {
                     if (env.CHANGED_SERVICES) {
-                        // Nếu là lần build đầu tiên, hãy dừng tất cả các container hiện có trước
+                        // If first build, stop all existing containers first
                         if (env.IS_FIRST_BUILD == "true") {
                             echo "First time deployment. Stopping all existing services before redeploying..."
                             sh "docker compose down || true"
-                        }
 
-                        // Khởi động lại các service đã thay đổi
-                        env.CHANGED_SERVICES.split().each { service ->
-                            echo "Restarting service: ${service}"
+                            // Verify the network is properly created after docker-compose down
+                            echo "Ensuring microservices-network exists..."
                             sh """
-                            # Dừng service hiện tại (nếu đang chạy)
-                            docker compose stop ${service} || true
-
-                            # Xóa container cũ để đảm bảo không có xung đột
-                            docker compose rm -f ${service} || true
-
-                            # Khởi động service với cấu hình mới
-                            docker compose up -d ${service} || { echo 'Failed to start ${service} but continuing'; }
+                            # Remove existing network if it exists
+                            docker network rm microservices-network || true
+                            # Create a fresh network
+                            docker network create microservices-network || true
                             """
                         }
 
-                        // Nếu là lần build đầu tiên, kiểm tra xem tất cả các service đã được khởi động chưa
+                        // Try to start all services with the api-gateway first
+                        echo "Starting api-gateway first..."
+                        sh """
+                        docker compose stop api-gateway || true
+                        docker compose rm -f api-gateway || true
+                        docker compose up -d api-gateway || echo 'Failed to start api-gateway but continuing'
+                        # Wait a bit for the gateway to be ready
+                        sleep 30
+                        """
+
+                        // Restart changed services (except api-gateway which was already started)
+                        env.CHANGED_SERVICES.split().each { service ->
+                            if (service != "api-gateway") {
+                                echo "Restarting service: ${service}"
+                                sh """
+                                # Stop current service (if running)
+                                docker compose stop ${service} || true
+
+                                # Remove old container to avoid conflicts
+                                docker compose rm -f ${service} || true
+
+                                # Start service with new configuration
+                                docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'
+                                # Brief pause between service starts
+                                sleep 5
+                                """
+                            }
+                        }
+
+                        // If first build, check if all services have been started
                         if (env.IS_FIRST_BUILD == "true") {
                             echo "Checking if all services have been started successfully..."
                             def servicesList = SERVICES.split()
@@ -308,7 +321,8 @@ pipeline {
                                 def isRunning = sh(script: "docker ps | grep ${service} || echo 'NOT_RUNNING'", returnStdout: true).trim()
                                 if (isRunning == 'NOT_RUNNING' || !isRunning.contains(service)) {
                                     echo "Service ${service} is not running, attempting to start it..."
-                                    sh "docker compose up -d ${service} || { echo 'Failed to start ${service} but continuing'; }"
+                                    sh "docker compose up -d ${service} || echo 'Failed to start ${service} but continuing'"
+                                    sh "sleep 5"
                                 }
                             }
                         }
@@ -325,6 +339,10 @@ pipeline {
                     echo "Verifying all services are running..."
                     def servicesList = SERVICES.split()
                     def failedServices = []
+
+                    // Allow more time for startup
+                    sh "echo 'Waiting 60 seconds for services to start...'"
+                    sh "sleep 60"
 
                     servicesList.each { service ->
                         def isRunning = sh(script: "docker ps | grep ${service} || echo 'NOT_RUNNING'", returnStdout: true).trim()
@@ -345,7 +363,7 @@ pipeline {
                             sh "docker compose logs ${service} | tail -n 50"
                         }
 
-                        // Không thất bại pipeline, nhưng ghi nhận lỗi
+                        // Don't fail pipeline, but log error
                         echo "WARNING: Some services failed to start, but continuing pipeline."
                     } else {
                         echo "All services are running correctly."
@@ -416,14 +434,14 @@ pipeline {
                     echo "No services were updated"
                 }
 
-                // Hiển thị URL truy cập API Gateway
+                // Display API Gateway access URL
                 echo "API Gateway is accessible at: http://localhost:45678"
             }
         }
         failure {
             echo 'Build or deployment failed'
             script {
-                // Trong trường hợp thất bại, hiển thị logs của các service thay đổi để debug
+                // In case of failure, display logs of changed services for debugging
                 if (env.CHANGED_SERVICES) {
                     env.CHANGED_SERVICES.split().each { service ->
                         sh "docker compose logs ${service} || echo 'Could not get logs for ${service}'"
