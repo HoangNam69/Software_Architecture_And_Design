@@ -1,0 +1,134 @@
+<!-- Created with Jaspersoft Studio version 7.0.1.final using JasperReports Library version 7.0.0  -->
+<jasperReport name="revenue_report" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ea742c37-9c1d-42db-80be-3a9b3894c3c1">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#030303">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<dataset name="RevenuewDataset" uuid="066e9980-2581-4fd2-81ae-3ac21277fa4f">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="RevenueDataAdapter"/>
+		<query language="sql"><![CDATA[]]></query>
+		<field name="productName" class="java.lang.String"/>
+		<field name="quantity" class="java.lang.Integer"/>
+		<field name="revenue" class="java.lang.Double"/>
+	</dataset>
+	<parameter name="TABLE_DATA_SOURCE" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
+	<parameter name="startDate" class="java.lang.String"/>
+	<parameter name="endDate" class="java.lang.String"/>
+	<parameter name="currentDayDate" class="java.lang.String"/>
+	<parameter name="totalRevenue" class="java.lang.Double"/>
+	<parameter name="currentMonthDate" class="java.lang.String"/>
+	<parameter name="currentYearDate" class="java.lang.String"/>
+	<query language="sql"><![CDATA[]]></query>
+	<background splitType="Stretch"/>
+	<title height="155" splitType="Stretch">
+		<element kind="staticText" uuid="86739f8a-36c7-41f6-932c-fcec6813027f" x="0" y="0" width="555" height="40" markup="html" fontName="times" fontSize="24.0" bold="true" hTextAlign="Center" vTextAlign="Bottom">
+			<text><![CDATA[Dev<span style="color:'#3452FF'">i</span>cer <span style="color:'#3452FF'">S</span>tore]]></text>
+		</element>
+		<element kind="staticText" uuid="1f2a279d-9c84-48ed-ad37-f72209aeb3ef" x="0" y="40" width="555" height="20" markup="html" fontName="times" fontSize="10.0" bold="false" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Gò Vấp  - Hồ Chí Minh]]></text>
+		</element>
+		<element kind="staticText" uuid="48be57ce-6320-4ce6-98df-0879e974c2ac" x="0" y="60" width="555" height="50" markup="html" fontName="times" fontSize="26.0" bold="true" hTextAlign="Center" vTextAlign="Bottom">
+			<text><![CDATA[Thống Kê Doanh Thu]]></text>
+		</element>
+		<element kind="textField" uuid="c00323ef-c121-4ea0-a10a-c24db1d3817c" x="0" y="110" width="555" height="20" fontName="times" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$P{startDate} + " - " + $P{endDate}]]></expression>
+		</element>
+	</title>
+	<detail>
+		<band height="415" splitType="Stretch">
+			<element kind="textField" uuid="4f034519-e456-492a-a9e2-e836c35e0010" x="0" y="0" width="555" height="30" fontName="times" fontSize="14.0" hTextAlign="Left" vTextAlign="Middle">
+				<paragraph leftIndent="6"/>
+				<expression><![CDATA["Doanh Thu: " + $P{totalRevenue} + " VNĐ"]]></expression>
+				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+			</element>
+			<element kind="staticText" uuid="9bb8620d-7a71-4689-914b-e4290b4a073b" x="0" y="30" width="555" height="30" markup="html" fontName="times" fontSize="14.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
+				<paragraph leftIndent="6"/>
+				<text><![CDATA[Top Sản Phẩm Bán Chạy:]]></text>
+				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+			</element>
+			<element kind="component" uuid="44327169-6bf9-4841-8c37-b72d71b50491" positionType="Float" x="0" y="70" width="555" height="60">
+				<component kind="table">
+					<datasetRun uuid="9366debe-6647-4e49-ba1f-33ab4857fcab" subDataset="RevenuewDataset">
+						<dataSourceExpression><![CDATA[$P{TABLE_DATA_SOURCE}]]></dataSourceExpression>
+					</datasetRun>
+					<column kind="single" uuid="1f1ae30a-960c-4ecf-917e-9f4e100fce02" width="250">
+						<columnHeader height="30" rowSpan="1" style="Table_CH">
+							<element kind="staticText" uuid="f9ce4b6e-dc47-4528-9c4d-e4a21e71374f" x="0" y="0" width="250" height="30" forecolor="#FFFFFF" fontName="times" hTextAlign="Center" vTextAlign="Middle">
+								<text><![CDATA[Tên Sản Phẩm]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="30" style="Table_TD">
+							<element kind="textField" uuid="6b7a384c-896f-4ef0-8b6d-2cb1c6ecfcdf" x="0" y="0" width="250" height="30" fontName="times" linkType="None" linkTarget="Self" vTextAlign="Middle">
+								<paragraph leftIndent="6"/>
+								<expression><![CDATA[$F{productName}]]></expression>
+								<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+							</element>
+						</detailCell>
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+					</column>
+					<column kind="single" uuid="c990e382-03da-46e5-91bb-2c803458b847" width="140">
+						<columnHeader height="30" rowSpan="1" style="Table_CH">
+							<element kind="staticText" uuid="90ffad79-04c0-48a3-8538-600b772c056f" x="0" y="0" width="140" height="30" forecolor="#FFFFFF" fontName="times" hTextAlign="Center" vTextAlign="Middle">
+								<text><![CDATA[Số Lượng]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="30" style="Table_TD">
+							<element kind="textField" uuid="0cbda39f-4161-49bc-991b-cc72f4ef1b50" x="0" y="0" width="140" height="30" fontName="times" hTextAlign="Center" vTextAlign="Middle">
+								<expression><![CDATA[$F{quantity}]]></expression>
+							</element>
+						</detailCell>
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+					</column>
+					<column kind="single" uuid="985ecdd7-799e-4135-92a0-c1e2580fb633" width="165">
+						<columnHeader height="30" rowSpan="1" style="Table_CH">
+							<element kind="staticText" uuid="1c0e6f83-751f-4300-b9e0-caff2120fed0" x="0" y="0" width="165" height="30" forecolor="#FFFFFF" fontName="times" hTextAlign="Center" vTextAlign="Middle">
+								<text><![CDATA[Doanh Thu]]></text>
+							</element>
+						</columnHeader>
+						<detailCell height="30" style="Table_TD">
+							<element kind="textField" uuid="dd89cf3b-ed29-4994-811d-c983bbe8ce9d" x="0" y="0" width="165" height="30" fontName="times" vTextAlign="Middle">
+								<paragraph leftIndent="6"/>
+								<expression><![CDATA[$F{revenue} + " VNĐ"]]></expression>
+								<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+							</element>
+						</detailCell>
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column3"/>
+					</column>
+				</component>
+				<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+				<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+				<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+				<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+			</element>
+			<element kind="textField" uuid="ca00b4a9-4683-4e87-8e7c-79a65ccff7e4" positionType="Float" x="0" y="140" width="555" height="20" fontName="times" fontSize="14.0" hTextAlign="Right" vTextAlign="Middle">
+				<paragraph rightIndent="25"/>
+				<expression><![CDATA["Ngày "+$P{currentDayDate} + " Tháng " + $P{currentMonthDate} + " Năm " + $P{currentYearDate}]]></expression>
+				<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+			</element>
+		</band>
+	</detail>
+</jasperReport>
