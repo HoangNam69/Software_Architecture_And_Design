@@ -3,22 +3,32 @@ version: '3.8'
 services:
   # Application Services
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     container_name: api-gateway
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Cổng này sẽ được thay đổi thành 45678:8080 bởi Jenkinsfile
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=https://auth.punshub.top/realms/tmdt
       - SERVER_PORT=8080
     env_file:
       - /var/env-config/api-gateway.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: always
     networks:
       - microservices-network
 
   admin-service:
-    build: ./admin-service
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
     container_name: admin-service
     ports:
       - "8087:8087"
@@ -27,7 +37,13 @@ services:
       - SERVER_PORT=8087
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/admin-service.env
     restart: always
@@ -35,7 +51,9 @@ services:
       - microservices-network
 
   authentication-service:
-    build: ./authentication-service
+    build:
+      context: ./authentication-service
+      dockerfile: Dockerfile
     container_name: authentication-service
     ports:
       - "8081:8081"
@@ -45,7 +63,13 @@ services:
       - KC_URL=https://auth.punshub.top
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/authentication-service.env
     restart: always
@@ -53,7 +77,9 @@ services:
       - microservices-network
 
   cart-service:
-    build: ./cart-service
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
     container_name: cart-service
     ports:
       - "8086:8086"
@@ -64,7 +90,13 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/cart-service.env
     restart: always
@@ -72,7 +104,9 @@ services:
       - microservices-network
 
   category-service:
-    build: ./category-service
+    build:
+      context: ./category-service
+      dockerfile: Dockerfile
     container_name: category-service
     ports:
       - "8082:8082"
@@ -84,7 +118,13 @@ services:
       - SPRING_DATASOURCE_PASSWORD=sapassword
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/category-service.env
     restart: always
@@ -92,7 +132,9 @@ services:
       - microservices-network
 
   order-service:
-    build: ./order-service
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
     container_name: order-service
     ports:
       - "8085:8085"
@@ -106,11 +148,17 @@ services:
       - SERVICES_PAYMENT_SERVICE_URL=http://api-gateway:8080/api/v1/payments
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
       product-service:
-        condition: service_started
+        condition: service_healthy
       payment-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/order-service.env
     restart: always
@@ -118,7 +166,9 @@ services:
       - microservices-network
 
   payment-service:
-    build: ./payment-service
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
     container_name: payment-service
     ports:
       - "8084:8084"
@@ -140,7 +190,13 @@ services:
       - ORDER_SERVICE_NOTIFICATION_URL=http://api-gateway:8080/api/v1/orders
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/payment-service.env
     restart: always
@@ -148,7 +204,9 @@ services:
       - microservices-network
 
   product-service:
-    build: ./product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
     container_name: product-service
     ports:
       - "8083:8083"
@@ -171,9 +229,15 @@ services:
       - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_TIMEOUTDURATION=0
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
       category-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/product-service.env
     restart: always
@@ -181,7 +245,9 @@ services:
       - microservices-network
 
   report-service:
-    build: ./report-service
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
     container_name: report-service
     ports:
       - "8088:8088"
@@ -190,13 +256,18 @@ services:
       - SERVER_PORT=8088
     depends_on:
       api-gateway:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     env_file:
       - /var/env-config/report-service.env
     restart: always
     networks:
       - microservices-network
-
 
 volumes:
   env-config:
@@ -204,4 +275,5 @@ volumes:
 
 networks:
   microservices-network:
+    name: microservices-network
     driver: bridge
