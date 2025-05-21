@@ -71,7 +71,7 @@ spring:
 
 app:
   cors:
-    allowed-origin-patterns: http://host.docker.internal:*,http://admin-service:*,http://localhost:*
+    allowed-origin-patterns: http://host.docker.internal:*,http://admin-service:*,http://localhost:*, https://devicer.punshub.top
   auth:
     token-validation-url: http://authentication-service:8081/api/v1/auth/token/validate
   # Service URLs for production environment
