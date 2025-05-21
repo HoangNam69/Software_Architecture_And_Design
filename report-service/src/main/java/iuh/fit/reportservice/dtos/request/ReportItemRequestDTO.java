@@ -4,7 +4,7 @@ public class ReportItemRequestDTO {
 
     private String productName;
     private int quantity;
-    private double revenue;
+    private String revenue;
 
     public ReportItemRequestDTO() {
     }
@@ -25,11 +25,11 @@ public class ReportItemRequestDTO {
         this.quantity = quantity;
     }
 
-    public double getRevenue() {
+    public String getRevenue() {
         return revenue;
     }
 
-    public void setRevenue(double revenue) {
+    public void setRevenue(String revenue) {
         this.revenue = revenue;
     }
 }

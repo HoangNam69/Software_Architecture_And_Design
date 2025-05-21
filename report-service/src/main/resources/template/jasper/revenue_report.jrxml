@@ -33,13 +33,13 @@
 		<query language="sql"><![CDATA[]]></query>
 		<field name="productName" class="java.lang.String"/>
 		<field name="quantity" class="java.lang.Integer"/>
-		<field name="revenue" class="java.lang.Double"/>
+		<field name="revenue" class="java.lang.String"/>
 	</dataset>
 	<parameter name="TABLE_DATA_SOURCE" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
 	<parameter name="startDate" class="java.lang.String"/>
 	<parameter name="endDate" class="java.lang.String"/>
 	<parameter name="currentDayDate" class="java.lang.String"/>
-	<parameter name="totalRevenue" class="java.lang.Double"/>
+	<parameter name="totalRevenue" class="java.lang.String"/>
 	<parameter name="currentMonthDate" class="java.lang.String"/>
 	<parameter name="currentYearDate" class="java.lang.String"/>
 	<query language="sql"><![CDATA[]]></query>
@@ -62,7 +62,7 @@
 		<band height="415" splitType="Stretch">
 			<element kind="textField" uuid="4f034519-e456-492a-a9e2-e836c35e0010" x="0" y="0" width="555" height="30" fontName="times" fontSize="14.0" hTextAlign="Left" vTextAlign="Middle">
 				<paragraph leftIndent="6"/>
-				<expression><![CDATA["Doanh Thu: " + $P{totalRevenue} + " VNĐ"]]></expression>
+				<expression><![CDATA["Doanh Thu: " + $P{totalRevenue}]]></expression>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
 			<element kind="staticText" uuid="9bb8620d-7a71-4689-914b-e4290b4a073b" x="0" y="30" width="555" height="30" markup="html" fontName="times" fontSize="14.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
@@ -112,7 +112,7 @@
 						<detailCell height="30" style="Table_TD">
 							<element kind="textField" uuid="dd89cf3b-ed29-4994-811d-c983bbe8ce9d" x="0" y="0" width="165" height="30" fontName="times" vTextAlign="Middle">
 								<paragraph leftIndent="6"/>
-								<expression><![CDATA[$F{revenue} + " VNĐ"]]></expression>
+								<expression><![CDATA[$F{revenue}]]></expression>
 								<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 							</element>
 						</detailCell>

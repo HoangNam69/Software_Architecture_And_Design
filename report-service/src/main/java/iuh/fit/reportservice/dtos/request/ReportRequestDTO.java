@@ -6,7 +6,7 @@ public class ReportRequestDTO {
     private String startDate;
     private String endDate;
     private String currentDate;
-    private Double totalRevenue;
+    private String totalRevenue;
     private List<ReportItemRequestDTO> reportItems;
 
     public ReportRequestDTO() {
@@ -36,11 +36,11 @@ public class ReportRequestDTO {
         this.currentDate = currentDate;
     }
 
-    public Double getTotalRevenue() {
+    public String getTotalRevenue() {
         return totalRevenue;
     }
 
-    public void setTotalRevenue(Double totalRevenue) {
+    public void setTotalRevenue(String totalRevenue) {
         this.totalRevenue = totalRevenue;
     }
 
