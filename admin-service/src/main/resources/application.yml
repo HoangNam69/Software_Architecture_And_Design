@@ -1,0 +1,13 @@
+server:
+  port: 8087
+spring:
+  application:
+    name: admin-service
+  profiles:
+    active: dev
+logging:
+  level:
+    root: info
+    org.springframework: info
+    g5.kttkpm: trace
+    web: info

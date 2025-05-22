@@ -1,0 +1,8 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+services:
+  category-service:
+    url: http://localhost:8080/api/v1/categories

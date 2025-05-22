@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  frontend:
+    url: https://devicer.punshub.top
+  auth:
+    callback-url: https://kttk.punshub.top/api/v1/auth/google/callback

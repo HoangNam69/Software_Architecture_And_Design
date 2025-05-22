@@ -1,13 +1,3 @@
-#spring.application.name=cart-service
-## Redis Configuration
-#spring.data.redis.host=localhost
-#spring.data.redis.port=6379
-## spring.redis.password=   # N?u Redis c?a b?n c� m?t kh?u
-#spring.data.redis.timeout=60000
-## C?u h�nh Redis Cache
-#spring.cache.type=redis
-#spring.cache.redis.time-to-live=3600000
-#spring.cache.redis.cache-null-values=false
 spring:
   data:
     redis:
@@ -16,10 +6,10 @@ spring:
       timeout: 2000
       lettuce:
         pool:
-          max-active: 8 # S? k?t n?i t?i ?a
-          max-idle: 8 # S? k?t n?i ide (r?nh r?i) t?i ?a trong pool
-          min-idle: 2 # S? k?t n?i ide t?i thi?u lu�n duy tr�
-          max-wait: -1ms # Th?i gian ch? t?i ?a khi pool ??y ( -1 = v� h?n)
+          max-active: 8 # So ket noi toi da
+          max-idle: 8 # So ket noi idle (ranh roi) toi da trong pool
+          min-idle: 2 # So ket noi toi thieu luon duy tri
+          max-wait: -1ms # Thoi gian cho toi da khi pool doi ( -1 = vo han)
 #      password:
 server:
   port: 8086

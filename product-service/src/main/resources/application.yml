@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: product-service
+  profiles:
+    active: dev
   data:
     mongodb:
       uri: mongodb://${spring.data.mongodb.username}:${spring.data.mongodb.password}@punshub.top:27017/${spring.data.mongodb.database}?authSource=admin
@@ -10,9 +12,6 @@ spring:
       username: admin
       password: sapassword
       database: product-db
-services:
-  category-service:
-    url: http://localhost:8082/api/v1/categories
 
 aws:
   access-key-id: AKIA6JQ45COKWDDJY65X

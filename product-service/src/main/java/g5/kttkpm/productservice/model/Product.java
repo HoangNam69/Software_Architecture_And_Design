@@ -18,7 +18,6 @@ import java.util.Map;
 public class Product {
     @Id
     private String id;
-    
     private String productId;
     
     // Basic product information
@@ -28,6 +27,7 @@ public class Product {
     private String brand;
     @Builder.Default
     private String thumbnailUrl = "https://architecture-system-design.s3.ap-southeast-2.amazonaws.com/defaults/default-product-image.png";
+    private List<String> imageUrls; // Added to match frontend model
     
     // Main Category
     private String mainCategoryId;
@@ -59,28 +59,30 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
-    // Nested class for price history
+    // Nested class for price history - updated to match frontend
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PriceHistory {
-        private BigDecimal price;
-        private LocalDateTime changedAt;
+        private BigDecimal oldPrice; // Changed from price to oldPrice
+        private BigDecimal newPrice; // Added newPrice field
+        private LocalDateTime timestamp; // Renamed from changedAt to timestamp
         private String changedBy;
-        private PriceChangeReason reason;
+        private PriceChangeReason changeReason; // Renamed from reason to changeReason
     }
     
-    // Nested class for quantity history
+    // Nested class for quantity history - updated to match frontend
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class QuantityHistory {
-        private Integer quantity;
-        private LocalDateTime changedAt;
+        private Integer oldQuantity; // Changed from quantity to oldQuantity
+        private Integer newQuantity; // Added newQuantity field
+        private LocalDateTime timestamp; // Renamed from changedAt to timestamp
         private String changedBy;
-        private QuantityChangeReason reason;
+        private QuantityChangeReason changeReason; // Renamed from reason to changeReason
     }
     
     // Enums for tracking changes
@@ -105,10 +107,10 @@ public class Product {
         RESTOCK,
         RETURN,
         MANUAL_ADJUSTMENT,
-        DAMAGED_STOCK
+        ORDER_PLACEMENT, ORDER_CANCELLATION, ORDER_FULFILLED, DAMAGED_STOCK
     }
     
-    // Utility methods
+    // Utility methods - updated to match new fields
     public void updatePrice(BigDecimal newPrice, PriceChangeReason reason, String changedBy) {
         // Initialize price history if null
         if (this.priceHistory == null) {
@@ -117,10 +119,11 @@ public class Product {
         
         // Add current price to price history before updating
         PriceHistory priceChangeRecord = PriceHistory.builder()
-            .price(this.currentPrice)
-            .changedAt(LocalDateTime.now())
+            .oldPrice(this.currentPrice)
+            .newPrice(newPrice)
+            .timestamp(LocalDateTime.now())
             .changedBy(changedBy)
-            .reason(reason)
+            .changeReason(reason)
             .build();
         
         this.priceHistory.add(priceChangeRecord);
@@ -136,10 +139,11 @@ public class Product {
         
         // Add current quantity to quantity history before updating
         QuantityHistory quantityChangeRecord = QuantityHistory.builder()
-            .quantity(this.totalQuantity)
-            .changedAt(LocalDateTime.now())
+            .oldQuantity(this.totalQuantity)
+            .newQuantity(newQuantity)
+            .timestamp(LocalDateTime.now())
             .changedBy(changedBy)
-            .reason(reason)
+            .changeReason(reason)
             .build();
         
         this.quantityHistory.add(quantityChangeRecord);

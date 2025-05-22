@@ -1,6 +1,8 @@
 spring:
   application:
     name: authentication-service
+  profiles:
+    active: dev
   security:
     oauth2:
       client:
@@ -8,7 +10,7 @@ spring:
           keycloak:
             client-id: tmdt-back-end
             client-secret: TYwKjdo1iRpwhMJfaWCqjN46ro0eNG8W
-            scope: openid email profile phone
+            scope: openid email profile phone roles
             authorization-grant-type: authorization_code
         provider:
           keycloak:
@@ -19,12 +21,6 @@ spring:
 server:
   port: 8081
 
-app:
-  frontend:
-    url: http://localhost:5173
-  auth:
-    callback-url: http://localhost:8081/api/v1/auth/google/callback
-
 keycloak:
   auth-server-url: https://auth.punshub.top
   realm: tmdt
@@ -33,3 +29,16 @@ keycloak:
     username: root
     password: root
 
+logging:
+  level:
+    root: off
+    org.springframework: info
+    g5.kttkpm: info
+
+resilience4j:
+  ratelimiter:
+    instances:
+      loginRateLimiter:
+        limitForPeriod: 5 # 5 requests per second
+        limitRefreshPeriod: 10s # 10 seconds
+        timeoutDuration: 0 # No timeout

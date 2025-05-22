@@ -1,0 +1,285 @@
+version: '3.8'
+
+services:
+  # Application Services
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "45678:8080"  # Port already modified as per Jenkinsfile logic
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=https://auth.punshub.top/realms/tmdt
+      - SERVER_PORT=8080
+    volumes:
+      - env-config:/var/env-config
+    env_file:
+      - /var/env-config/api-gateway.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: always
+    networks:
+      - microservices-network
+
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8087
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/admin-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  authentication-service:
+    build:
+      context: ./authentication-service
+      dockerfile: Dockerfile
+    container_name: authentication-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8081
+      - KC_URL=https://auth.punshub.top
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/authentication-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  cart-service:
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
+    container_name: cart-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8086
+      - SPRING_DATA_REDIS_HOST=punshub.top
+      - SPRING_DATA_REDIS_PORT=6379
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/cart-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  category-service:
+    build:
+      context: ./category-service
+      dockerfile: Dockerfile
+    container_name: category-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/category-service
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=sapassword
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/category-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8085
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/order-service
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=sapassword
+      - SERVICES_PRODUCT_SERVICE_URL=http://api-gateway:8080/api/v1/products
+      - SERVICES_PAYMENT_SERVICE_URL=http://api-gateway:8080/api/v1/payments
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+      - product-service
+      - payment-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/order-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_APPLICATION_NAME=payment-service
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8084
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=org.postgresql.Driver
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://punshub.top:5432/payment-service
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=sapassword
+      - SPRING_JPA_HIBERNATE_DDL-AUTO=update
+      - SPRING_JPA_SHOW-SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - PAYOS_CLIENT_ID=abc
+      - PAYOS_API_KEY=abc
+      - PAYOS_CHECKSUM_KEY=acb
+      - ORDER_SERVICE_NOTIFICATION_URL=http://api-gateway:8080/api/v1/orders
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/payment-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_APPLICATION_NAME=product-service
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8083
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:sapassword@punshub.top:27017/product-db?authSource=admin
+      - SPRING_DATA_MONGODB_DATABASE=product-db
+      - SPRING_DATA_MONGODB_USERNAME=admin
+      - SPRING_DATA_MONGODB_PASSWORD=sapassword
+      - SPRING_DATA_MONGODB_AUTO_INDEX_CREATION=true
+      - SERVICES_CATEGORY_SERVICE_URL=http://api-gateway:8080/api/v1/categories
+      - AWS_ACCESS_KEY_ID=abc
+      - AWS_SECRET_ACCESS_KEY=abc
+      - AWS_REGION=ap-southeast-2
+      - AWS_BUCKET_NAME=architecture-system-design
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_LIMITFORPERIOD=5
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_LIMITREFRESHPERIOD=1s
+      - RESILIENCE4J_RATELIMITER_INSTANCES_PRODUCTSEARCHLIMITER_TIMEOUTDURATION=0
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+      - category-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/product-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+  report-service:
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
+    container_name: report-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8088
+    volumes:
+      - env-config:/var/env-config
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - /var/env-config/report-service.env
+    restart: always
+    networks:
+      - microservices-network
+
+volumes:
+  env-config:
+    external: true
+
+networks:
+  microservices-network:
+    external: true

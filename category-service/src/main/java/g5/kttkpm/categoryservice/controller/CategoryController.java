@@ -50,13 +50,20 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
     
+    // New endpoint for deleting a category and all its children
+    @DeleteMapping("/{id}/delete-with-children")
+    public ResponseEntity<Void> deleteCategoryAndChildren(@PathVariable UUID id) {
+        categoryService.deleteCategoryAndChildren(id);
+        return ResponseEntity.noContent().build();
+    }
+    
     @GetMapping(params = "name")
     public ResponseEntity<List<Category>> searchCategoriesByName(@RequestParam String name) {
         List<Category> categories = categoryService.searchCategoriesByName(name);
         return ResponseEntity.ok(categories);
     }
     
-    // New endpoints for subcategories
+    // Endpoints for subcategories
     @GetMapping("/{id}/subcategories")
     public ResponseEntity<List<Category>> getSubcategories(@PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.getSubcategories(id));
@@ -70,7 +77,7 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSubcategory);
     }
     
-    // New endpoints for metadata
+    // Endpoints for metadata
     @GetMapping("/{id}/metadata")
     public ResponseEntity<Map<String, String>> getCategoryMetadata(@PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.getCategoryMetadata(id));

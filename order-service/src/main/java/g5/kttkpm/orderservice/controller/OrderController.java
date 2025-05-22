@@ -6,6 +6,7 @@ import g5.kttkpm.orderservice.entity.Order;
 import g5.kttkpm.orderservice.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,12 @@ public class OrderController {
     
     private final OrderService orderService;
     private final PaymentClient paymentClient;
+    
+    @Value("${services.callback.success}")
+    private String paymentCallbackSuccessUrl;
+    
+    @Value("${services.callback.cancel}")
+    private String paymentCallbackCancelUrl;
     
     @PostMapping
     @CircuitBreaker(name = "productService", fallbackMethod = "fallbackCreateOrder")
@@ -49,6 +56,33 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
     
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order updatedOrder) {
+        Order existingOrder = orderService.getOrderById(id);
+        if (existingOrder == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        existingOrder.setStatus(updatedOrder.getStatus());
+        existingOrder.setCustomerName(updatedOrder.getCustomerName());
+        existingOrder.setCustomerEmail(updatedOrder.getCustomerEmail());
+        existingOrder.setCustomerPhone(updatedOrder.getCustomerPhone());
+        existingOrder.setCustomerAddress(updatedOrder.getCustomerAddress());
+
+        orderService.updateOrder(existingOrder);
+        return ResponseEntity.ok(existingOrder);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        Order existingOrder = orderService.getOrderById(id);
+        if (existingOrder == null) {
+            return ResponseEntity.notFound().build();
+        }
+        orderService.deleteOrderById(id);
+        return ResponseEntity.noContent().build();
+    }
+    
     /**
      * API để tạo đơn hàng và chuyển đến thanh toán
      */
@@ -74,8 +108,8 @@ public class OrderController {
                 .collect(Collectors.toList()));
             
             // Cấu hình URL callback
-            paymentRequest.setReturnUrl("http://localhost:5173/orders/payment/success?orderId=" + order.getId());
-            paymentRequest.setCancelUrl("http://localhost:5173/orders/payment/cancel?orderId=" + order.getId());
+            paymentRequest.setReturnUrl(paymentCallbackSuccessUrl + order.getId());
+            paymentRequest.setCancelUrl(paymentCallbackCancelUrl + order.getId());
             
             // Thông tin người mua (nếu có)
             paymentRequest.setBuyerName(order.getCustomerName());
@@ -83,21 +117,20 @@ public class OrderController {
             paymentRequest.setBuyerPhone(order.getCustomerPhone());
             
             // 3. Gọi đến payment-service để tạo liên kết thanh toán
-            ResponseEntity<PaymentResponseDTO> paymentResponse = paymentClient.getPaymentLink(paymentRequest);
+            PaymentResponseDTO paymentResponse = paymentClient.getPaymentLink(paymentRequest);
             
             // 4. Cập nhật thông tin đơn hàng với kết quả từ payment-service
-            if (paymentResponse.getStatusCode().is2xxSuccessful() && paymentResponse.getBody() != null) {
-                PaymentResponseDTO paymentData = paymentResponse.getBody();
+            if (paymentResponse != null) {
                 
                 // Cập nhật đơn hàng với mã thanh toán và URL
-                order.setPaymentOrderCode(paymentData.orderCode());
-                order.setPaymentUrl(paymentData.paymentUrl());
+                order.setPaymentOrderCode(paymentResponse.orderCode());
+                order.setPaymentUrl(paymentResponse.paymentUrl());
                 order.setStatus("AWAITING_PAYMENT");
                 
                 orderService.updatePaymentUrlAndStatusByPaymentOrderCode(order);
                 
                 // Trả về URL thanh toán cho frontend
-                return ResponseEntity.ok(paymentData);
+                return ResponseEntity.ok(paymentResponse);
             } else {
                 // Xử lý lỗi từ payment-service
                 order.setPaymentOrderCode("");

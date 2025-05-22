@@ -7,14 +7,18 @@ import java.util.List;
 
 public interface OrderService {
     Order createOrder(OrderRequest orderRequest);
+
     List<Order> getAllOrders();
+
     Order getOrderById(Long orderId);
-    
+
     void updatePaymentUrlAndStatusByPaymentOrderCode(Order order);
-    
+
     Order findByPaymentOrderCode(String s);
-    
+
     void updateOrder(Order order);
-    
+
+    void deleteOrderById(Long id);
+
     List<Order> getOrderByUserId(String userId);
 }

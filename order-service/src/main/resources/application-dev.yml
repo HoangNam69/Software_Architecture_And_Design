@@ -1,0 +1,13 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+services:
+  product-service:
+    url: http://localhost:8080/api/v1/products
+  payment-service:
+    url: http://localhost:8080/api/v1/payments
+  callback:
+    success: http://localhost:5173/orders/payment/success?orderId=
+    cancel: http://localhost:5173/orders/payment/cancel?orderId=

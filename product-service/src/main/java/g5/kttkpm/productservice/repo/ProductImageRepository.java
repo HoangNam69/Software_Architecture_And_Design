@@ -10,4 +10,7 @@ import java.util.Optional;
 @Repository
 public interface ProductImageRepository extends MongoRepository<ProductImage, String> {
     Optional<ProductImage> findByProductId(String productId);
+    
+    
+    List<ProductImage> findAllByProductIdIn(List<String> productIds);
 }
